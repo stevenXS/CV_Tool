@@ -17,7 +17,7 @@
 - data augment
 - mAP
 - Counter数据统计与seaborn绘图
-- 大图crop
+- image_crop
 - 验证集切分
 - 数据可视化
 - 数据清洗
