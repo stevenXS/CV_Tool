@@ -1,4 +1,5 @@
 # -*- coding=utf-8 -*-
+import os
 import xml.etree.ElementTree as ET
 import xml.dom.minidom as DOC
 
@@ -25,7 +26,7 @@ def parse_xml(xml_path):
     return coords
 
 #将bounding box信息写入xml文件中, bouding box格式为[[x_min, y_min, x_max, y_max, name]]
-def generate_xml(img_name,coords,img_size,out_root_path):
+def generate_xml(img_name, coords, img_size, out_root_path):
     '''
     输入：
         img_name：图片名称，如a.jpg

@@ -26,6 +26,10 @@ import numpy as np
 from skimage.util import random_noise
 from skimage import exposure
 
+SHOW = False
+SAVE = True
+img_format = '.jpg'
+
 def show_pic(img, bboxes=None):
     '''
     输入:
@@ -328,7 +332,7 @@ class DataAugmentForObjectDetection():
         return shift_img, shift_bboxes
 
     # 镜像
-    def _filp_pic_bboxes(self, img, bboxes):
+    def _filp_pic_bboxes(self, img, bboxes, horizon=True):
         '''
             参考:https://blog.csdn.net/jningwei/article/details/78753607
             平移后的图片要包含所有的框
@@ -342,10 +346,10 @@ class DataAugmentForObjectDetection():
         # ---------------------- 翻转图像 ----------------------
         import copy
         flip_img = copy.deepcopy(img)
-        if random.random() < 0.5:    #0.5的概率水平翻转，0.5的概率垂直翻转
-            horizon = True
-        else:
-            horizon = False
+        # if random.random() < 0.5:    #0.5的概率水平翻转，0.5的概率垂直翻转
+        #     horizon = True
+        # else:
+        #     horizon = False
         h,w,_ = img.shape
         if horizon: #水平翻转
             flip_img =  cv2.flip(flip_img, 1)   #1是水平，-1是水平垂直
@@ -366,7 +370,7 @@ class DataAugmentForObjectDetection():
 
         return flip_img, flip_bboxes
 
-    def dataAugment(self, img, bboxes):
+    def dataAugment(self, img, bboxes, method='flip'):
         '''
         图像增强
         输入:
@@ -422,7 +426,15 @@ class DataAugmentForObjectDetection():
         # return img, bboxes
 
         ''' clw modify：自由选择增强的种类 '''
-        img, bboxes = self._filp_pic_bboxes(img, bboxes)
+        if method == 'flip_horizonal':
+            img, bboxes = self._filp_pic_bboxes(img, bboxes, horizon=True)  # 水平翻转
+        elif method == 'flip_vertical':
+            img, bboxes = self._filp_pic_bboxes(img, bboxes, horizon=False)  # 垂直翻转
+        elif method == 'rotate_90':  #
+            img, bboxes = self._rotate_img_bbox(img, bboxes, 90)
+        else:
+            raise RuntimeError('augment method not supported!')
+
         return img, bboxes
 
 if __name__ == '__main__':
@@ -438,29 +450,59 @@ if __name__ == '__main__':
 
 
     '''xml类型的数据'''
-    # source_pic_root_path = './data_split'
-    # source_xml_root_path = './data_voc/VOC2007/Annotations'
-    #
-    # for parent, _, files in os.walk(source_pic_root_path):
-    #     for file in files:
-    #         cnt = 0
-    #         while cnt < need_aug_num:
-    #             pic_path = os.path.join(parent, file)
-    #             xml_path = os.path.join(source_xml_root_path, file[:-4]+'.xml')
-    #             coords = parse_xml(xml_path)        #解析得到box信息，格式为[[x_min,y_min,x_max,y_max,name]]
-    #             coords = [coord[:4] for coord in coords]
-    #
-    #             img = cv2.imread(pic_path)
-    #             show_pic(img, coords)    # 原图
-    #
-    #             auged_img, auged_bboxes = dataAug.dataAugment(img, coords)
-    #             cnt += 1
-    #
-    #             show_pic(auged_img, auged_bboxes)  # 强化后的图
+    source_pic_root_path = 'E:/train'
+    source_xml_root_path = 'E:/train'
+
+    for parent, _, files in os.walk(source_pic_root_path):
+        files = [file for file in files if file.endswith(img_format)]
+        for cnt, file in enumerate(files):
+            pic_path = os.path.join(parent, file)
+            xml_path = os.path.join(source_xml_root_path, file[:-4]+'.xml')
+            coords_with_name = parse_xml(xml_path)        #解析得到box信息，格式为[[x_min,y_min,x_max,y_max,name]]
+            coords = [coord[:4] for coord in coords_with_name]
+
+            img = cv2.imread(pic_path)
+
+            aug_img_fliph, aug_bboxes_fliph = dataAug.dataAugment(img, coords, method='flip_horizonal')
+            for i, coord in enumerate(aug_bboxes_fliph):
+                coord.append(coords_with_name[i][4]) # 增加标签名信息，如car, person
+
+            aug_img_flipv, aug_bboxes_flipv = dataAug.dataAugment(img, coords, method='flip_vertical')
+            for i, coord in enumerate(aug_bboxes_flipv):
+                coord.append(coords_with_name[i][4])
+
+            # aug_img_rotate, aug_bboxes_rotate = dataAug.dataAugment(img, coords, method='rotate_90')
+            # for i, coord in enumerate(aug_bboxes_rotate):
+            #     coord.append(coords_with_name[i][4])
+
+            if SHOW:
+                show_pic(img, coords)    # 原图
+                show_pic(aug_img_fliph, aug_bboxes_fliph)  # 强化后的图
+                show_pic(aug_img_flipv, aug_bboxes_flipv)
+                #show_pic(aug_img_rotate, aug_bboxes_rotate)
+
+            if SAVE:
+                augment_save_folder = 'augment'
+                augment_save_path = os.path.join(source_xml_root_path, augment_save_folder)
+                if not os.path.exists(augment_save_path):
+                    os.makedirs(augment_save_path)
+
+                generate_xml(file[:-4] + '_fliph' + file[-4:], aug_bboxes_fliph, img.shape, augment_save_path)
+                cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_fliph' + file[-4:] , aug_img_fliph)
+
+                generate_xml(file[:-4] + '_flipv' + file[-4:], aug_bboxes_flipv, img.shape, augment_save_path)
+                cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_flipv' + file[-4:] , aug_img_flipv)
+
+                # generate_xml(file[:-4] + '_rotate' + file[-4:], aug_bboxes_rotate, img.shape, augment_save_path)
+                # cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_rotate' + file[-4:] , aug_img_rotate)
+
+                print('clw: processed %d images.' % (cnt + 1))
 
 
-    ''' 非标coco格式的数据（2019天池Textile） '''
-    # 读取json
+
+
+'''
+    ### 非标coco格式的数据，json格式（2019天池Textile）
     import json
     img_and_anno_root = 'C:/Users/Administrator/Desktop/'
     annFile = img_and_anno_root + 'result.json'
@@ -511,11 +553,11 @@ if __name__ == '__main__':
         elif image_name.endswith('.png'):
             cv2.imwrite(img_path + 'augimg/' + image_name.split('.')[0] + '_' + str(j) + '.png', auged_img)
 
-        # 保存增强后的bbox坐标到非标准coco，即json文件中
+        # 保存增强后的bbox坐标到json文件，格式为2019天池Textile，非标准coco
         for i, auged_bbox in enumerate(auged_bboxes):
             result_json.append({'name': image_name, 'category': labels[i], 'bbox': [auged_bbox[0], auged_bbox[1], auged_bbox[2], auged_bbox[3]]})
         print('clw: image_name = ', image_name)
 
     with open(img_and_anno_root + 'aug_result.json', 'w') as fp:
         json.dump(result_json, fp, indent=4, separators=(',', ': '))
-
+'''
