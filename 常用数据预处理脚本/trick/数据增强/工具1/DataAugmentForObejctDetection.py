@@ -430,8 +430,8 @@ class DataAugmentForObjectDetection():
             img, bboxes = self._filp_pic_bboxes(img, bboxes, horizon=True)  # 水平翻转
         elif method == 'flip_vertical':
             img, bboxes = self._filp_pic_bboxes(img, bboxes, horizon=False)  # 垂直翻转
-        elif method == 'rotate_90':  #
-            img, bboxes = self._rotate_img_bbox(img, bboxes, 90)
+        elif method == 'rotate_180':  #
+            img, bboxes = self._rotate_img_bbox(img, bboxes, 180)
         else:
             raise RuntimeError('augment method not supported!')
 
@@ -450,8 +450,8 @@ if __name__ == '__main__':
 
 
     '''xml类型的数据'''
-    source_pic_root_path = 'E:/train'
-    source_xml_root_path = 'E:/train'
+    source_pic_root_path = 'D:/dataset/resize_v3/train/'
+    source_xml_root_path = source_pic_root_path
 
     for parent, _, files in os.walk(source_pic_root_path):
         files = [file for file in files if file.endswith(img_format)]
@@ -471,9 +471,9 @@ if __name__ == '__main__':
             for i, coord in enumerate(aug_bboxes_flipv):
                 coord.append(coords_with_name[i][4])
 
-            # aug_img_rotate, aug_bboxes_rotate = dataAug.dataAugment(img, coords, method='rotate_90')
-            # for i, coord in enumerate(aug_bboxes_rotate):
-            #     coord.append(coords_with_name[i][4])
+            aug_img_rotate, aug_bboxes_rotate = dataAug.dataAugment(img, coords, method='rotate_180')
+            for i, coord in enumerate(aug_bboxes_rotate):
+                coord.append(coords_with_name[i][4])
 
             if SHOW:
                 show_pic(img, coords)    # 原图
@@ -493,8 +493,8 @@ if __name__ == '__main__':
                 generate_xml(file[:-4] + '_flipv' + file[-4:], aug_bboxes_flipv, img.shape, augment_save_path)
                 cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_flipv' + file[-4:] , aug_img_flipv)
 
-                # generate_xml(file[:-4] + '_rotate' + file[-4:], aug_bboxes_rotate, img.shape, augment_save_path)
-                # cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_rotate' + file[-4:] , aug_img_rotate)
+                generate_xml(file[:-4] + '_rotate' + file[-4:], aug_bboxes_rotate, img.shape, augment_save_path)
+                cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_rotate' + file[-4:] , aug_img_rotate)
 
                 print('clw: processed %d images.' % (cnt + 1))
 
