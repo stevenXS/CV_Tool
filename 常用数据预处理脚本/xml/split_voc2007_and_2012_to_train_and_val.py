@@ -1,3 +1,15 @@
+'''
+# 功能：把原始目录结构的voc2007、voc2012等数据集，按照训练集和测试集划分好，
+#       分别放置在train_path和test_path下
+
+VOC2007数据集共包含：
+训练集（train+val共有5011张，其中train.txt有2501张，val.txt有2510张），
+测试集（4952幅），共计9963幅图，
+（自注：对于VOC2012，train+val共有11540张，train.txt有5717张，val.txt有5823张；  加上VOC2007共计16551张；
+另外对于yolov3一般是把2007和2012的train.txt和val.txt都放一块作为训练集，然后把比如2007的test.txt作为测试集，
+可以用这个命令来合并txt：cat 2007_train.txt 2007_val.txt 2012_*.txt > train.txt）
+'''
+
 import os
 import sys
 import xml.etree.ElementTree as ET
