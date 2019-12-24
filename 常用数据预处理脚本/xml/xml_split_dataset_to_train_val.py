@@ -13,10 +13,14 @@ sns.set(color_codes=True)  # 暗蓝色背景，带格子
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
 plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 
-xmls_path = 'F:/crop'
-img_format = '.png'
+# xmls_path = 'C:/Users/62349/Desktop/20191205_scale/'
+xmls_path = 'C:/Users/62349/Downloads/chongqing1_round1_train1_20191223_split/xml1/all/scale'
 
-zh_dict = {'other': '其他', 'background': '背景', 'crease': '折痕'}
+#zh_dict = {'joint': '驳口', 'hole': '破洞', 'hole_oval': '破洞_椭圆状', 'crease_leaf': '折痕_竹叶状','crease_felt': '折痕_毛毡印', 'broken edge': '烂边'}
+zh_dict = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4','5': '5',
+           '6': '6', '7': '7', '8': '8', '9': '9', '10': '10'}
+
+img_format = '.jpg'
 
 '''
 函数功能：
@@ -61,9 +65,9 @@ print('gt nums:', gt_nums_count_all)
 import random
 
 xml_file_nums = len(xml_file_names)  # 统计xml总共的个数
-val_split_ratio = 0.2
-class_split_ratio_min = 0.16  # 每一类在验证集的object个数不能少于0.15，
-class_split_ratio_max = 0.25  # 每一类在验证集的object个数不能多于0.25
+val_split_ratio = 0.1
+class_split_ratio_min = 0.08   # 每一类在验证集的object个数不能少于0.15，
+class_split_ratio_max = 0.12  # 每一类在验证集的object个数不能多于0.25
 count_split_times = 0  # 统计切分验证集的随机次数
 
 while(1):
@@ -72,7 +76,7 @@ while(1):
     xml_file_names_val = xml_file_names[:int(val_split_ratio * xml_file_nums)]
     gt_nums_count_val = count_gt_nums(xmls_path, xml_file_names_val)
     for key in gt_nums_count_all:
-        if gt_nums_count_all[key] <= 10:  # 当然对于比如某个类总共只有10个样本，就不考虑验证集的样本数量了，因为样本数量太少了，根本不用关心这个类的训练结果；
+        if gt_nums_count_all[key] <= 30:  # 当然对于比如某个类总共只有3个样本，就不考虑验证集的样本数量了，因为样本数量太少了，根本不用关心这个类的训练结果；
             continue
 
         if key not in gt_nums_count_val:  # 如果验证集里面都没有这个key，说明不行，直接重新分验证集

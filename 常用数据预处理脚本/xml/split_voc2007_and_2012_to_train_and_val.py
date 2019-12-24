@@ -17,15 +17,12 @@ import xml.etree.ElementTree as ET
 import shutil
 
 #### clw note: VOC2007 and 2012
-ROOT = '/media/clwclw/data/VOCdevkit'   # Root folder where the VOCdevkit is located
+ROOT = 'E:/deep_learning/dataset/VOCdevkit/'   # Root folder where the VOCdevkit is located
 TRAINSET = [
-    ('2012', 'train'),
-    ('2012', 'val'),
-    ('2007', 'train'),
     ('2007', 'val'),
     ]
 
-TESTSET = [('2007', 'test')]
+TESTSET = []
 
 train_xml = []
 train_img = []

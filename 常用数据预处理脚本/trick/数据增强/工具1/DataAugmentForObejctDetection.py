@@ -450,7 +450,7 @@ if __name__ == '__main__':
 
 
     '''xml类型的数据'''
-    source_pic_root_path = 'D:/dataset/resize_v3/train/'
+    source_pic_root_path = 'C:/Users/62349/Desktop/newfolder/all/classify/color_crease/train/'
     source_xml_root_path = source_pic_root_path
 
     for parent, _, files in os.walk(source_pic_root_path):

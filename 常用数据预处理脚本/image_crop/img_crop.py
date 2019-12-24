@@ -7,12 +7,15 @@ import copy, cv2
 
 cropped_width = 1024
 cropped_height = 1024
+# cropped_width = 512
+# cropped_height = 512
 step = 1024
 img_format = '.jpg'
 
 # 配置好训练集的路径
-img_root = "D:/dataset/2018xuelang/"
-save_root = "D:/dataset/2018xuelang/"
+img_root = "C:/Users/62349/Desktop/111/333/"
+#img_root = "C:/Users/62349/Downloads/chongqing1_round1_train1_20191223_split/visualized_image2/"
+save_root = img_root
 crop_root = save_root + "crop/"
 scale_root = save_root + "scale/"
 diff_root = save_root + "diff/"
@@ -65,7 +68,7 @@ def image_crop(image, img_file_name):
 
 
 def image_scale(img, img_file_name):
-    scaled_img = cv2.resize(img,(cropped_width, cropped_height))
+    scaled_img = cv2.resize(img,(cropped_width, cropped_height), interpolation=cv2.INTER_AREA)
     scaled_img_path = os.path.join(scale_root, img_file_name)
     cv2.imwrite(scaled_img_path, scaled_img)
     print("save", scaled_img_path)
@@ -120,8 +123,8 @@ def main():
         print (idx + 1, 'read img', img_file_name)
         img_path = os.path.join(img_root, img_file_name)
         img = cv2.imread(img_path)
-        image_crop(img, img_file_name)
-        # image_scale(img, img_file_name)
+        image_crop(img, img_file_name)  # 下面这三句根据需要选择
+        #image_scale(img, img_file_name)
         # scale_diff(img, img_file_name)
     pass
 

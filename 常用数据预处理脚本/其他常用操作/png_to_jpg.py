@@ -1,7 +1,7 @@
 import os
 from PIL import Image
 
-img_path = 'E:/textile/raw/20191011(deprecated)/GC1/'
+img_path = 'E:/textile/raw/20191017(deprecated)/image/'
 
 from_format = '.png'
 to_format = '.jpg'

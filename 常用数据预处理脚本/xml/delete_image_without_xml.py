@@ -3,7 +3,7 @@
 import xml.etree.ElementTree as ET
 import os
 
-xml_path = 'F:/crop'
+xml_path = 'C:/Users/62349/Desktop/all/crop'
 file_names = os.listdir(xml_path)
 
 count_remove = 0

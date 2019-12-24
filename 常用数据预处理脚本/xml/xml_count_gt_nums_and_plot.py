@@ -12,9 +12,11 @@ sns.set(color_codes=True)  # 暗蓝色背景，带格子
 plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
 plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
 
-xml_path = 'F:/【纺织品缺陷检测】/label/crop_xml_all2'
+#xml_path = 'E:/12.9/scale'
+xml_path = 'C:/Users/62349/Desktop/resize_v7/train'
 
-zh_dict = {'other': '其他', 'background': '背景', 'crease': '折痕'}
+zh_dict = {'joint': '驳口', 'hole': '破洞', 'hole_oval': '破洞_椭圆状', 'crease_leaf': '折痕_竹叶状','crease_felt': '折痕_毛毡印',
+           'broken edge': '烂边'}
 
 file_names = os.listdir(xml_path)
 xml_file_names = []
