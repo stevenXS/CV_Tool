@@ -13,22 +13,30 @@ step = 1024
 img_format = '.jpg'
 
 # 配置好训练集的路径
-img_root = "C:/Users/62349/Desktop/111/333/"
+img_root = "C:/Users/62349/Desktop/20200110/all/"
 #img_root = "C:/Users/62349/Downloads/chongqing1_round1_train1_20191223_split/visualized_image2/"
 save_root = img_root
-crop_root = save_root + "crop/"
-scale_root = save_root + "scale/"
-diff_root = save_root + "diff/"
+mode = 'crop'  # clw note: 3 choice: (1)crop (2)scale (3)diff
+
+if mode == 'crop':
+    crop_root = save_root + "crop/"
+elif mode == 'scale':
+    scale_root = save_root + "scale/"
+elif mode =='diff':
+    diff_root = save_root + "diff/"
 
 def prepare_folder():
     if not os.path.exists(save_root): 
         os.makedirs(save_root)
-    if not os.path.exists(crop_root):
-        os.makedirs(crop_root)
-    if not os.path.exists(scale_root):
-        os.makedirs(scale_root)
-    if not os.path.exists(diff_root):
-        os.makedirs(diff_root)
+    if mode == 'crop':
+        if not os.path.exists(crop_root):
+            os.makedirs(crop_root)
+    elif mode == 'scale':
+        if not os.path.exists(scale_root):
+            os.makedirs(scale_root)
+    elif mode == 'diff':
+        if not os.path.exists(diff_root):
+            os.makedirs(diff_root)
     pass
 
 # def image_crop(img, img_file_name):  # written by huminglong, but not good
@@ -123,9 +131,12 @@ def main():
         print (idx + 1, 'read img', img_file_name)
         img_path = os.path.join(img_root, img_file_name)
         img = cv2.imread(img_path)
-        image_crop(img, img_file_name)  # 下面这三句根据需要选择
-        #image_scale(img, img_file_name)
-        # scale_diff(img, img_file_name)
+        if mode == 'crop':
+            image_crop(img, img_file_name)
+        elif mode == 'scale':
+            image_scale(img, img_file_name)
+        elif mode == 'diff':
+            scale_diff(img, img_file_name)
     pass
 
 if __name__ == "__main__":
