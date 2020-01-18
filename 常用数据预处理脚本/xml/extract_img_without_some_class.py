@@ -34,16 +34,52 @@ def process(xml_file_path, out_path, extract_classes):
     tree = ET.parse(xml_file_path, parser=utf8_parser)
     root = tree.getroot()
 
-    ## none object left, return direct
     objs = root.findall('object')
+    ### none object left, return direct
+    # if len(objs) < 1:
+    #     return
+    ### clw note: none object left, write a bbox like(0, 0, 20, 20) for background.
     if len(objs) < 1:
-        return
+        element = ET.Element('object')
+        # 创建二级目录
+        oneName = ET.Element('name')
+        oneName.text = 'background'  # 二级目录的值 #结果展示：<id>1</id>
+        onePose = ET.Element('pose')
+        onePose.text = 'Unspecified'
+        oneTruncated = ET.Element('truncated')
+        oneTruncated.text = '1'
+        oneDifficult = ET.Element('difficult')
+        oneDifficult.text = '0'
+        oneBndbox = ET.Element('bndbox')
+        xmin = ET.Element('xmin')
+        ymin = ET.Element('ymin')
+        xmax = ET.Element('xmax')
+        ymax = ET.Element('ymax')
 
-    ## clear object which not in 'extract_classes'
-    for anno_id, obj in enumerate(root.iter('object')):
-        name = obj.find('name').text
-        if name not in extract_classes:
-            return
+        xmin.text = str(0)
+        ymin.text = str(0)
+        xmax.text = str(10)
+        ymax.text = str(10)
+
+        oneBndbox.append(xmin)
+        oneBndbox.append(ymin)
+        oneBndbox.append(xmax)
+        oneBndbox.append(ymax)
+
+        element.append(oneName)
+        element.append(onePose)
+        element.append(oneTruncated)
+        element.append(oneDifficult)
+        element.append(oneBndbox)
+        root.append(element)
+
+    tree.write(os.path.join(out_path, xml_file_path.split("/")[-1]), encoding="utf-8")
+
+    # ## clear object which not in 'extract_classes'
+    # for anno_id, obj in enumerate(root.iter('object')):
+    #     name = obj.find('name').text
+    #     if name not in extract_classes:
+    #         return
 
     jpg_path = xml_file_path[:-3] + "jpg"
     png_path = xml_file_path[:-3] + "png"
