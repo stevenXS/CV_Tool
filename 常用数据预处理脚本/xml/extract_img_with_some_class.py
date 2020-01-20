@@ -35,6 +35,41 @@ def process(xml_file_path, out_path, extract_classes):
     ## none object left, return direct
     if len(objs) < 1:
         return
+        
+    ### clw note: none object left, write a bbox like(0, 0, 20, 20) for background.
+    if len(objs) < 1:
+        element = ET.Element('object')
+        # 创建二级目录
+        oneName = ET.Element('name')
+        oneName.text = 'background'  # 二级目录的值 #结果展示：<id>1</id>
+        onePose = ET.Element('pose')
+        onePose.text = 'Unspecified'
+        oneTruncated = ET.Element('truncated')
+        oneTruncated.text = '1'
+        oneDifficult = ET.Element('difficult')
+        oneDifficult.text = '0'
+        oneBndbox = ET.Element('bndbox')
+        xmin = ET.Element('xmin')
+        ymin = ET.Element('ymin')
+        xmax = ET.Element('xmax')
+        ymax = ET.Element('ymax')
+
+        xmin.text = str(0)
+        ymin.text = str(0)
+        xmax.text = str(10)
+        ymax.text = str(10)
+
+        oneBndbox.append(xmin)
+        oneBndbox.append(ymin)
+        oneBndbox.append(xmax)
+        oneBndbox.append(ymax)
+
+        element.append(oneName)
+        element.append(onePose)
+        element.append(oneTruncated)
+        element.append(oneDifficult)
+        element.append(oneBndbox)
+        root.append(element)
 
     ml_file_path = xml_file_path.replace('\\', '/') # clw added: for windows
     tree.write(os.path.join(out_path, xml_file_path.split("/")[-1]), encoding="utf-8")
