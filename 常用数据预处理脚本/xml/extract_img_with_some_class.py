@@ -32,10 +32,13 @@ def process(xml_file_path, out_path, extract_classes):
     
     objs = root.findall('object')
 
+    # 选择1：没有obj直接return，那么xml都不会有
     ## none object left, return direct
     if len(objs) < 1:
         return
-        
+    # 选择2：屏蔽掉上面这两句，那么会有xml但是什么obj都没有，如果有的框架支持负样本训练，则这样
+    
+    # 选择3：如果没有obj，在左上角生成一个background的obj，坐标左上角(0,0)，右下角(10,10)，因为有的框架不支持负样本（也就是0obj）训练，那么我们手动添加一个 
     ### clw note: none object left, write a bbox like(0, 0, 20, 20) for background.
     if len(objs) < 1:
         element = ET.Element('object')
@@ -70,7 +73,7 @@ def process(xml_file_path, out_path, extract_classes):
         element.append(oneDifficult)
         element.append(oneBndbox)
         root.append(element)
-
+##########################################################################
     ml_file_path = xml_file_path.replace('\\', '/') # clw added: for windows
     tree.write(os.path.join(out_path, xml_file_path.split("/")[-1]), encoding="utf-8")
 
