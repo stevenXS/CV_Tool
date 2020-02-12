@@ -4,6 +4,8 @@ import json
 # 输入src_json_file，
 # 输出train.json, val.json
 src_json_file = "C:/Users/62349/Downloads/chongqing1_round2_train_20200213/annotations.json"
+#src_json_file = "C:/Users/62349/Downloads/chongqing1_round1_train_20191223/annotations.json"
+
 
 with open(src_json_file, 'r') as f:
     label_data = json.load(f)
@@ -13,7 +15,7 @@ annot_data = label_data['annotations']  # {'area': 2993.0, 'iscrowd': 0, 'image_
 images_info = label_data['images']  # img_name, img_id, img_height, img_width
 
 
-category_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+category_ids = [1,2,3,4,5,9,10,11,12,13]
 img_format = '.jpg'
 
 '''
@@ -65,9 +67,9 @@ while(1):
     annot_data_val = []
     annot_data_train = []
     for i, ann in enumerate(annot_data):
-        if ann["image_id"] in val_index:
+        if ann["image_id"]-1 in val_index:
             annot_data_val.append(ann)
-        elif ann["image_id"] in train_index:
+        elif ann["image_id"]-1 in train_index:
             annot_data_train.append(ann)
         else:
             assert False, 'image_id has some bug, not in val_index and train_index'
@@ -99,14 +101,14 @@ while(1):
 
         # 3 生成train.json和val.json两个文件
         label_data['categories'] = categ_infos
-        label_data['annotations'] = images_info_val
-        label_data['images'] = annot_data_val
+        label_data['annotations'] = annot_data_val
+        label_data['images'] = images_info_val
         with open('val.json', 'w') as fp:
             json.dump(label_data, fp, indent=1, separators=(',', ': '))
 
         label_data['categories'] = categ_infos
-        label_data['annotations'] = images_info_train
-        label_data['images'] = annot_data_train
+        label_data['annotations'] = annot_data_train
+        label_data['images'] = images_info_train
         with open('train.json', 'w') as fp:
             json.dump(label_data, fp, indent=1, separators=(',', ': '))
 
