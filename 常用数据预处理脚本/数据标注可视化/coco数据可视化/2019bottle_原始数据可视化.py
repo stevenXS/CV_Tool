@@ -130,7 +130,7 @@ if VISUALIZE_SINGLE:
 else:
     # 查看所有图片
     flag_SHOW = False
-    for imgId in range(90, len(img_list)):
+    for imgId in range(95, len(img_list)):
     #for imgId in range(4106, 4106+len(img_list)):
     #for i in range(3000, len(img_list)):  # look up from xxxx
     # for i in range(5): # clw note：随机查看几张
@@ -186,7 +186,6 @@ else:
 
             if cats[anns[j]['category_id']]['id'] == 13:
                 flag_SHOW = True
-                break
 
         if not flag_SHOW:
             continue
