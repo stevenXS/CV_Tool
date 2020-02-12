@@ -13,8 +13,8 @@ plt.rcParams['figure.figsize'] = (10.0, 10.0)
 
 
 
-ann_json = 'D:/textile/final/train.json'
-images_file = 'D:/textile/final/train/'
+ann_json = 'C:/Users/62349/Downloads/chongqing1_round2_train_20200213/annotations.json'
+images_file = 'C:/Users/62349/Downloads/chongqing1_round2_train_20200213/images/'
 with open(ann_json) as f:
     ann=json.load(f)
 
