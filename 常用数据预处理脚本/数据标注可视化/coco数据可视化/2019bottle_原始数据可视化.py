@@ -43,10 +43,10 @@ from PIL import Image, ImageDraw, ImageFont
 
 #img_and_anno_root = '/mfs/home/fangyong/data/guangdong/round1/train/'
 #img_and_anno_root ='K:/deep_learning/dataset/2019tianchi/train/'
-img_and_anno_root = 'C:/Users/62349/Downloads/chongqing1_round1_train1_20191223_split/'
-img_path = img_and_anno_root + 'images2/'
-annFile = img_and_anno_root + 'annotations2.json'
-img_save_path = img_and_anno_root + 'visualized_image2'
+img_and_anno_root = 'C:/Users/62349/Downloads/chongqing1_round2_train_20200213/'
+img_path = img_and_anno_root + 'images/'
+annFile = img_and_anno_root + 'annotations.json'
+img_save_path = img_and_anno_root + 'visualized_image'
 VISUALIZE_SINGLE = False
 NEED_SAVE = True
 
@@ -129,8 +129,9 @@ if VISUALIZE_SINGLE:
 
 else:
     # 查看所有图片
-    #for imgId in range(1, len(img_list)):
-    for imgId in range(4106, 4106+len(img_list)):
+    flag_SHOW = False
+    for imgId in range(90, len(img_list)):
+    #for imgId in range(4106, 4106+len(img_list)):
     #for i in range(3000, len(img_list)):  # look up from xxxx
     # for i in range(5): # clw note：随机查看几张
         img = coco.loadImgs(imgId)[0]
@@ -138,7 +139,7 @@ else:
         print('clw: already read %d images' % (imgId))
         # print(img)
 
-        # 加载并显示图片
+        # #加载并显示图片
         # I = io.imread('%s/%s' % (img_path, img['file_name']))
         # plt.axis('off')
         # plt.imshow(I)
@@ -183,12 +184,20 @@ else:
 
             img = draw_rectangle(coordinates, labels, img)
 
+            if cats[anns[j]['category_id']]['id'] == 13:
+                flag_SHOW = True
+                break
+
+        if not flag_SHOW:
+            continue
+        flag_SHOW = False
+
         if NEED_SAVE:
             cv2.imwrite(os.path.join(img_save_path, image_name), img)
-        #else:
-            # cv2.namedWindow(image_name, 0);
-            # cv2.resizeWindow(image_name, 1600, 1200);
-            # cv2.moveWindow(image_name, 0, 0);
-            # cv2.imshow(image_name, image)
-            # cv2.waitKey(0)
-            # cv2.destroyAllWindows()
+        cv2.namedWindow(image_name, 0);
+        cv2.resizeWindow(image_name, 1600, 1200);
+        cv2.moveWindow(image_name, 0, 0);
+        cv2.imshow(image_name, img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+
