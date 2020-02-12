@@ -1,10 +1,8 @@
 # written by clw
-
-import os
-import shutil  # for move files to val folder
 import json
 
-
+# 输入src_json_file，
+# 输出train.json, val.json
 src_json_file = "C:/Users/62349/Downloads/chongqing1_round2_train_20200213/annotations.json"
 
 with open(src_json_file, 'r') as f:
@@ -14,16 +12,14 @@ categ_infos = label_data['categories']
 annot_data = label_data['annotations']  # {'area': 2993.0, 'iscrowd': 0, 'image_id': 1, 'bbox': [2500.0, 1268.0, 41.0, 73.0], 'category_id': 12, 'id': 1}
 images_info = label_data['images']  # img_name, img_id, img_height, img_width
 
-# zh_dict = {'0': '0', '1': '1', '2': '2', '3': '3', '4': '4','5': '5',
-#            '6': '6', '7': '7', '8': '8', '9': '9', '10': '10'}
 
 category_ids = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
 img_format = '.jpg'
 
 '''
 函数功能：
-输入:某一含有很多xml文件的路径，以及所有xml文件的列表
-输出:每一类缺陷数量的统计结果，以dict的形式返回
+输入:json中的annotations信息列表，[{'area': 2993.0, 'iscrowd': 0, 'image_id': 1, 'bbox': [2500.0, 1268.0, 41.0, 73.0], 'category_id': 12, 'id': 1}, {....}, ....]
+输出:每一类缺陷数量的统计结果，以dict的形式返回， 如{12: 73, 13: 131, 11: 2469}
 '''
 def count_gt_nums(annot_data):
     gt_nums_count = {}
@@ -45,7 +41,7 @@ print('gt nums:', gt_nums_count_all)
 
 # 2、随机按一定比例（默认8:2，即验证集占20%）来划分训练集和验证集
 #    比如数据集一共有100张图片，随机抽20张作为验证集
-#    对验证集的类别数量进行统计，如果不能保证每一类缺陷的个数都在20%左右的一定范围，
+#    对验证集的类别数量进行统计，如果不能保证每一类缺陷的个数都在20%左右的一定范围，如19%-21%
 #    则回到该步骤开始的地方，重新划分，重新统计，如此往复...
 import random
 random.seed(0)
