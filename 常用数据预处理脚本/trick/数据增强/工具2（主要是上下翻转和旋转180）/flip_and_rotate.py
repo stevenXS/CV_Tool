@@ -11,14 +11,15 @@ import os, json
 from PIL import Image, ImageDraw
 from tqdm import tqdm
 
-path = '/media/clwclw/data/2019bottle/coco_format/'
+path = '/media/clwclw/data/2019bottle/pingshen/'
 name = 'train'
 
 def vflip(dataset, path, name):
     save_dir = path + 'train_vflip'
     os.makedirs(save_dir, exist_ok=True)
     for img_info in tqdm(dataset['images']):
-        img = Image.open(os.path.join(path, 'train', img_info['file_name']))
+        #img = Image.open(os.path.join(path, 'train', img_info['file_name']))
+        img = Image.open(os.path.join(path, 'images', img_info['file_name']))  # clw note: 根据实际情况选择
         img = img.transpose(1)
         img.save(os.path.join(save_dir, img_info['file_name']))
 
@@ -41,7 +42,8 @@ def hflip(dataset, path, name):
     save_dir = path + 'train_hflip'
     os.makedirs(save_dir, exist_ok=True)
     for img_info in tqdm(dataset['images']):
-        img = Image.open(os.path.join(path, 'train', img_info['file_name']))
+        #img = Image.open(os.path.join(path, 'train', img_info['file_name']))
+        img = Image.open(os.path.join(path, 'images', img_info['file_name']))  # clw note: 根据实际情况选择
         img = img.transpose(1)
         img.save(os.path.join(save_dir, img_info['file_name']))
 
@@ -62,7 +64,8 @@ def rotate180(dataset, path, name):
     save_dir = path + 'defect_Images_rotate180'
     os.makedirs(save_dir, exist_ok=True)
     for img_info in tqdm(dataset['images']):
-        img = Image.open(os.path.join(path, 'defect_Images', img_info['file_name']))
+        #img = Image.open(os.path.join(path, 'defect_Images', img_info['file_name']))
+        img = Image.open(os.path.join(path, 'images', img_info['file_name']))  # clw note: 根据实际情况选择
         img = img.transpose(3)
         img.save(os.path.join(save_dir, img_info['file_name']))
 
@@ -88,8 +91,8 @@ def rotate180(dataset, path, name):
 
 
 dataset = json.load(open(path + '{}.json'.format(name)))
-hflip(dataset, path, name)
-#vflip(dataset, path, name)
+#hflip(dataset, path, name)
+vflip(dataset, path, name)
 #rotate180(dataset, path, name)
 
 # path = '/mfs/home/fangyong/data/guangdong/round2/train_clw/'
