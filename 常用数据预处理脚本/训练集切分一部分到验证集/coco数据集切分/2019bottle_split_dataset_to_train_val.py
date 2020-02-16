@@ -3,7 +3,7 @@ import json
 
 # 输入src_json_file，
 # 输出train.json, val.json
-src_json_file = "C:/Users/62349/Downloads/chongqing1_round2_train_20200213/annotations.json"
+src_json_file = "C:/Users/62349/Downloads/chongqing1_round2_train_20200213/annotations_pingshen.json"
 #src_json_file = "C:/Users/62349/Downloads/chongqing1_round1_train_20191223/annotations.json"
 
 
@@ -15,7 +15,7 @@ annot_data = label_data['annotations']  # {'area': 2993.0, 'iscrowd': 0, 'image_
 images_info = label_data['images']  # img_name, img_id, img_height, img_width
 
 
-category_ids = [1,2,3,4,5,9,10,11,12,13]
+category_ids = [1,2,3,4,5,9,10,11,12,13]  # 这个不影响，只要需要分验证集的类里面有就行
 img_format = '.jpg'
 
 '''
@@ -51,8 +51,11 @@ assert round(random.random(), 3) == 0.844, '随机数种子不同，导致不同
 
 img_nums = len(images_info)  # 统计总共的图片个数
 val_split_ratio = 0.2
-class_split_ratio_min = 0.19   # 每一类在验证集的object个数不能少于0.15，
-class_split_ratio_max = 0.21  # 每一类在验证集的object个数不能多于0.25
+class_split_ratio_min = 0.19   # 每一类在验证集的object个数不能少于0.18，
+class_split_ratio_max = 0.21  # 每一类在验证集的object个数不能多于0.22
+# val_split_ratio = 0.1
+# class_split_ratio_min = 0.09   # 每一类在验证集的object个数不能少于0.18，
+# class_split_ratio_max = 0.11  # 每一类在验证集的object个数不能多于0.22
 count_split_times = 0  # 统计切分验证集的随机次数
 
 while(1):
@@ -63,16 +66,20 @@ while(1):
     train_index = list(set(range(img_nums)).difference(val_index))
     images_info_val = [images_info[i] for i in val_index]
     images_info_train = [images_info[i] for i in train_index]
+    images_info_val_index = [ item['id'] for item in images_info_val]
+    images_info_train_index = [item['id'] for item in images_info_train]
 
     annot_data_val = []
     annot_data_train = []
     for i, ann in enumerate(annot_data):
-        if ann["image_id"]-1 in val_index:
+        #if ann["image_id"]-1 in val_index:
+        if ann["image_id"] in images_info_val_index:
             annot_data_val.append(ann)
-        elif ann["image_id"]-1 in train_index:
+        #elif ann["image_id"]-1 in train_index:
+        elif ann["image_id"] in images_info_train_index:
             annot_data_train.append(ann)
         else:
-            assert False, 'image_id has some bug, not in val_index and train_index'
+            assert False, 'image_id %d has some bug, not in val_index and train_index' % (int(ann["image_id"]-1))
 
     gt_nums_count_val = count_gt_nums(annot_data_val)
     for key in gt_nums_count_all:
