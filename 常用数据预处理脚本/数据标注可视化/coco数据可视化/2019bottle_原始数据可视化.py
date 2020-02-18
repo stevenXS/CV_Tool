@@ -45,7 +45,8 @@ from PIL import Image, ImageDraw, ImageFont
 #img_and_anno_root ='K:/deep_learning/dataset/2019tianchi/train/'
 img_and_anno_root = 'C:/Users/62349/Downloads/chongqing1_round2_train_20200213/'
 img_path = img_and_anno_root + 'images/'
-annFile = img_and_anno_root + 'annotations.json'
+#annFile = img_and_anno_root + 'annotations.json'
+annFile = img_and_anno_root + 'annotations_origin_with_background.json'
 img_save_path = img_and_anno_root + 'visualized_image'
 VISUALIZE_SINGLE = False
 NEED_SAVE = True
@@ -130,7 +131,7 @@ if VISUALIZE_SINGLE:
 else:
     # 查看所有图片
     flag_SHOW = False
-    for imgId in range(95, len(img_list)):
+    for imgId in range(1, len(img_list)):
     #for imgId in range(4106, 4106+len(img_list)):
     #for i in range(3000, len(img_list)):  # look up from xxxx
     # for i in range(5): # clw note：随机查看几张
@@ -184,7 +185,8 @@ else:
 
             img = draw_rectangle(coordinates, labels, img)
 
-            if cats[anns[j]['category_id']]['id'] == 13:
+            #if cats[anns[j]['category_id'] - 1]['id']== 13:
+            if cats[anns[j]['category_id'] ]['id'] == 0:
                 flag_SHOW = True
 
         if not flag_SHOW:
@@ -193,10 +195,10 @@ else:
 
         if NEED_SAVE:
             cv2.imwrite(os.path.join(img_save_path, image_name), img)
-        cv2.namedWindow(image_name, 0);
-        cv2.resizeWindow(image_name, 1600, 1200);
-        cv2.moveWindow(image_name, 0, 0);
-        cv2.imshow(image_name, img)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
+        # cv2.namedWindow(image_name, 0);
+        # cv2.resizeWindow(image_name, 1600, 1200);
+        # cv2.moveWindow(image_name, 0, 0);
+        # cv2.imshow(image_name, img)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
