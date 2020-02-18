@@ -43,13 +43,23 @@ from PIL import Image, ImageDraw, ImageFont
 
 #img_and_anno_root = '/mfs/home/fangyong/data/guangdong/round1/train/'
 #img_and_anno_root ='K:/deep_learning/dataset/2019tianchi/train/'
-img_and_anno_root = 'C:/Users/62349/Downloads/chongqing1_round2_train_20200213/'
-img_path = img_and_anno_root + 'images/'
-#annFile = img_and_anno_root + 'annotations.json'
-annFile = img_and_anno_root + 'annotations_origin_with_background.json'
+#img_and_anno_root = 'C:/Users/62349/Downloads/chongqing1_round2_train_20200213/'
+img_and_anno_root = '/media/clwclw/data/2019bottle/pingshen/'
+
+# img_path = img_and_anno_root + 'images/'
+# annFile = img_and_anno_root + 'train.json'
+# img_path = img_and_anno_root + 'train_hflip/'
+# annFile = img_and_anno_root + 'train_hflip.json'
+img_path = img_and_anno_root + 'train_vflip/'
+annFile = img_and_anno_root + 'train_vflip.json'
+# img_path = img_and_anno_root + 'train_rotate180/'
+# annFile = img_and_anno_root + 'train_rotate180.json'
+# img_path = img_and_anno_root + 'images/'
+# annFile = img_and_anno_root + 'annotations_origin_with_background.json'
+
 img_save_path = img_and_anno_root + 'visualized_image'
 VISUALIZE_SINGLE = False
-NEED_SAVE = True
+NEED_SAVE = False
 
 if NEED_SAVE:
     if not os.path.exists(img_save_path):
@@ -85,6 +95,7 @@ coco = COCO(annFile)
 
 # display COCO categories and supercategories
 cats = coco.loadCats(coco.getCatIds())
+
 cats = sorted(cats, key = lambda e:e.get('id'),reverse = False) # clw note：这里并不完全是COCO格式，只能算是类COCO格式，因此
                                                                 #           比如这里的categories就不是排序的，因此需要手动排序
 
@@ -130,14 +141,15 @@ if VISUALIZE_SINGLE:
 
 else:
     # 查看所有图片
-    flag_SHOW = False
-    for imgId in range(1, len(img_list)):
+    flag_SHOW = True
+    imgids = coco.getImgIds()
+    for i, imgId in enumerate(imgids):
     #for imgId in range(4106, 4106+len(img_list)):
     #for i in range(3000, len(img_list)):  # look up from xxxx
     # for i in range(5): # clw note：随机查看几张
         img = coco.loadImgs(imgId)[0]
         image_name = img['file_name']
-        print('clw: already read %d images' % (imgId))
+        print('clw: already read %d images' % (i+1))
         # print(img)
 
         # #加载并显示图片
@@ -180,25 +192,25 @@ else:
             coordinates.append(coordinate)
 
             # 2、找到对应的标签
-            #labels.append(cats[anns[j]['category_id'] - 1 ]['name']) # clw note: the reason to -1 is that the first is 1 but the index should be 0
-            labels.append(cats[anns[j]['category_id']]['name'])
+            labels.append(cats[anns[j]['category_id'] - 1 ]['name']) # clw note: the reason to -1 is that the first is 1 but the index should be 0
+            #labels.append(cats[anns[j]['category_id']]['name'])
 
             img = draw_rectangle(coordinates, labels, img)
 
             #if cats[anns[j]['category_id'] - 1]['id']== 13:
-            if cats[anns[j]['category_id'] ]['id'] == 0:
-                flag_SHOW = True
+            #if cats[anns[j]['category_id'] ]['id'] == 0:
+            #    flag_SHOW = True
 
-        if not flag_SHOW:
-            continue
-        flag_SHOW = False
+        #if not flag_SHOW:
+        #    continue
+        #flag_SHOW = False
 
         if NEED_SAVE:
             cv2.imwrite(os.path.join(img_save_path, image_name), img)
-        # cv2.namedWindow(image_name, 0);
-        # cv2.resizeWindow(image_name, 1600, 1200);
-        # cv2.moveWindow(image_name, 0, 0);
-        # cv2.imshow(image_name, img)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        cv2.namedWindow(image_name, 0);
+        cv2.resizeWindow(image_name, 1600, 1200);
+        cv2.moveWindow(image_name, 0, 0);
+        cv2.imshow(image_name, img)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
 
