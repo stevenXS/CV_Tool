@@ -48,14 +48,16 @@ img_and_anno_root = '/media/clwclw/data/2019bottle/pingshen/'
 
 # img_path = img_and_anno_root + 'images/'
 # annFile = img_and_anno_root + 'train.json'
+img_path = img_and_anno_root + 'images_hflip/'
+annFile = img_and_anno_root + 'annotations_pingshen_hflip.json'
 # img_path = img_and_anno_root + 'train_hflip/'
 # annFile = img_and_anno_root + 'train_hflip.json'
 # img_path = img_and_anno_root + 'train_vflip/'
 # annFile = img_and_anno_root + 'train_vflip.json'
 # img_path = img_and_anno_root + 'train_rotate180/'
 # annFile = img_and_anno_root + 'train_rotate180.json'
-img_path = img_and_anno_root + 'images/'
-annFile = img_and_anno_root + 'val.json'
+# img_path = img_and_anno_root + 'images/'
+# annFile = img_and_anno_root + 'val.json'
 # img_path = img_and_anno_root + 'images/'
 # annFile = img_and_anno_root + 'annotations_origin_with_background.json'
 
@@ -194,8 +196,8 @@ else:
             coordinates.append(coordinate)
 
             # 2、找到对应的标签
-            labels.append(cats[anns[j]['category_id'] - 1 ]['name']) # clw note: the reason to -1 is that the first is 1 but the index should be 0
-            #labels.append(cats[anns[j]['category_id']]['name'])
+            labels.append(cats[anns[j]['category_id'] - 1 ]['name'])  # clw note: start from 1, not 0; the reason to -1 is that the first is 1 but the index should be 0
+            #labels.append(cats[anns[j]['category_id']]['name'])  # clw note: start from 0;
 
             img = draw_rectangle(coordinates, labels, img)
 
