@@ -50,10 +50,12 @@ img_and_anno_root = '/media/clwclw/data/2019bottle/pingshen/'
 # annFile = img_and_anno_root + 'train.json'
 # img_path = img_and_anno_root + 'train_hflip/'
 # annFile = img_and_anno_root + 'train_hflip.json'
-img_path = img_and_anno_root + 'train_vflip/'
-annFile = img_and_anno_root + 'train_vflip.json'
+# img_path = img_and_anno_root + 'train_vflip/'
+# annFile = img_and_anno_root + 'train_vflip.json'
 # img_path = img_and_anno_root + 'train_rotate180/'
 # annFile = img_and_anno_root + 'train_rotate180.json'
+img_path = img_and_anno_root + 'images/'
+annFile = img_and_anno_root + 'val.json'
 # img_path = img_and_anno_root + 'images/'
 # annFile = img_and_anno_root + 'annotations_origin_with_background.json'
 
@@ -149,7 +151,7 @@ else:
     # for i in range(5): # clw note：随机查看几张
         img = coco.loadImgs(imgId)[0]
         image_name = img['file_name']
-        print('clw: already read %d images' % (i+1))
+        print('clw: already read {} images, image_name: {}'.format(i+1, image_name))
         # print(img)
 
         # #加载并显示图片
