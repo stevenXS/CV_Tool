@@ -44,7 +44,7 @@ def hflip(dataset, path, name):
     for img_info in tqdm(dataset['images']):
         #img = Image.open(os.path.join(path, 'train', img_info['file_name']))
         img = Image.open(os.path.join(path, 'images', img_info['file_name']))  # clw note: 根据实际情况选择
-        img = img.transpose(1)
+        img = img.transpose(0)
         img.save(os.path.join(save_dir, img_info['file_name']))
 
     image_id2wh = {i['id']: [i['width'], i['height']] for i in dataset['images']}
@@ -61,7 +61,7 @@ def hflip(dataset, path, name):
 
 
 def rotate180(dataset, path, name):
-    save_dir = path + 'defect_Images_rotate180'
+    save_dir = path + 'train_rotate180'
     os.makedirs(save_dir, exist_ok=True)
     for img_info in tqdm(dataset['images']):
         #img = Image.open(os.path.join(path, 'defect_Images', img_info['file_name']))
@@ -90,10 +90,12 @@ def rotate180(dataset, path, name):
 
 
 
-dataset = json.load(open(path + '{}.json'.format(name)))
-#hflip(dataset, path, name)
-vflip(dataset, path, name)
-#rotate180(dataset, path, name)
+dataset1 = json.load(open(path + '{}.json'.format(name)))
+dataset2 = json.load(open(path + '{}.json'.format(name)))
+dataset3 = json.load(open(path + '{}.json'.format(name)))
+hflip(dataset1, path, name)  # 注意hflip可能会修改dataset,会影响下面的flip,所以搞3份出来
+vflip(dataset2, path, name)
+rotate180(dataset3, path, name)
 
 # path = '/mfs/home/fangyong/data/guangdong/round2/train_clw/'
 # name = 'train2'
