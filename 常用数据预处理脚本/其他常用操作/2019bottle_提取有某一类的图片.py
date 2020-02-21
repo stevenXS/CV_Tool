@@ -10,10 +10,10 @@ import os
 #img_and_anno_root ='K:/deep_learning/dataset/2019tianchi/train/'
 img_and_anno_root = 'C:/Users/62349/Downloads/chongqing1_round2_train_20200213/'
 
-img_path = img_and_anno_root + 'pingshen/'
-annFile = img_and_anno_root + 'val_pingshen.json'
+img_path = img_and_anno_root + 'images/'
+annFile = img_and_anno_root + 'annotations.json'
 
-img_save_path = img_and_anno_root + 'val_pingshen'
+img_save_path = img_and_anno_root + 'out'
 
 if not os.path.exists(img_save_path):
     os.makedirs(img_save_path)
@@ -37,10 +37,21 @@ for i, imgId in enumerate(imgids):
 
     print('clw: already read {} images, image_name: {}'.format(i+1, image_name))
     # print(img)
+    anns = coco.imgToAnns[imgId]
+    for j, ann in enumerate(anns):
+        if anns[j]['category_id'] == 12:
+            shutil.copy(os.path.join(img_path, image_name), os.path.join(img_save_path, image_name))
+            continue
 
-    shutil.copy(os.path.join(img_path, image_name), os.path.join(img_save_path, image_name) )
+
+
+
     #img = cv2.imread(os.path.join(img_path, image_name))
     #cv2.imwrite(os.path.join(img_save_path, image_name), img)
+
+
+
+
 
 '''nms_across_levels
     # #加载并显示图片
