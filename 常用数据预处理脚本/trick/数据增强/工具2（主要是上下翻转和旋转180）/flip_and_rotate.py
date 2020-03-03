@@ -10,12 +10,28 @@
 import os, json
 from PIL import Image, ImageDraw
 from tqdm import tqdm
+import cv2
+import numpy as np
 
-path = '/media/clwclw/data/2019bottle/pingshen/'
-name = 'train'
+## pingshen
+path = '/media/clwclw/data/2019bottle/pingshen/'   # root path of data
+name = 'annotations_pingshen'    # annotation's name
+# path = '/media/clwclw/data/2019bottle/pingshen/'
+# name = 'train'
+
+## pinggai
+#path = '/media/clwclw/data/2019bottle/chongqing1_round1_train_20191223/'
+#name = 'train'
 
 def vflip(dataset, path, name):
-    save_dir = path + 'train_vflip'
+    if 'train' in name:
+        save_dir = path + 'train_vflip'
+        print('vflip save_dir:', save_dir)
+    else:
+        save_dir = path + 'images_vflip'
+        print('vflip save_dir:', save_dir)
+
+
     os.makedirs(save_dir, exist_ok=True)
     for img_info in tqdm(dataset['images']):
         #img = Image.open(os.path.join(path, 'train', img_info['file_name']))
@@ -39,7 +55,13 @@ def vflip(dataset, path, name):
 ###
 # clw add: hflip
 def hflip(dataset, path, name):
-    save_dir = path + 'train_hflip'
+    if 'train' in name:
+        save_dir = path + 'train_hflip'
+        print('hflip save_dir:', save_dir)
+    else:
+        save_dir = path + 'images_hflip'
+        print('hflip save_dir:', save_dir)
+
     os.makedirs(save_dir, exist_ok=True)
     for img_info in tqdm(dataset['images']):
         #img = Image.open(os.path.join(path, 'train', img_info['file_name']))
@@ -61,7 +83,13 @@ def hflip(dataset, path, name):
 
 
 def rotate180(dataset, path, name):
-    save_dir = path + 'train_rotate180'
+    if 'train' in name:
+        save_dir = path + 'train_rotate180'
+        print('rotate180 save_dir:', save_dir)
+    else:
+        save_dir = path + 'images_rotate180'
+        print('rotate180 save_dir:', save_dir)
+
     os.makedirs(save_dir, exist_ok=True)
     for img_info in tqdm(dataset['images']):
         #img = Image.open(os.path.join(path, 'defect_Images', img_info['file_name']))
@@ -87,18 +115,50 @@ def rotate180(dataset, path, name):
     json.dump(dataset, open(path + '{}_rotate180.json'.format(name), 'w'), indent=1, separators=(',', ': '))
 
 
+###
+# clw add: 交换xy轴
+def xy_exchange(dataset, path, name):
+    if 'train' in name:
+        save_dir = path + 'train_xy_exchange'
+        print('xy_exchange save_dir:', save_dir)
+    else:
+        save_dir = path + 'images_xy_exchange'
+        print('xy_exchange save_dir:', save_dir)
+
+    os.makedirs(save_dir, exist_ok=True)
+    for img_info in tqdm(dataset['images']):
+        #img = Image.open(os.path.join(path, 'train', img_info['file_name']))
+        #img = Image.open(os.path.join(path, 'images', img_info['file_name']))  # clw note: 根据实际情况选择
+        img = cv2.imread(os.path.join(path, 'images', img_info['file_name']))
+        img = np.swapaxes(img, 0, 1)
+        cv2.imwrite(os.path.join(save_dir, img_info['file_name']), img)
+
+    image_id2wh = {i['id']: [i['width'], i['height']] for i in dataset['images']}
+
+    for anno_info in tqdm(dataset['annotations']):
+        w, h = image_id2wh[anno_info['image_id']]
+        tmp = anno_info['bbox'][0]
+        anno_info['bbox'][0] = anno_info['bbox'][1]
+        anno_info['bbox'][1] = tmp
+        tmp = anno_info['bbox'][2]
+        anno_info['bbox'][2] = anno_info['bbox'][3]
+        anno_info['bbox'][3] = tmp
+
+    json.dump(dataset, open(path + '{}_xy_exchange.json'.format(name),'w'), indent=1, separators=(',', ': '))
 
 
+# 水平翻转
+# dataset1 = json.load(open(path + '{}.json'.format(name)))
+# hflip(dataset1, path, name)  # 注意hflip可能会修改dataset,会影响下面的flip,所以搞3份出来
 
-dataset1 = json.load(open(path + '{}.json'.format(name)))
-dataset2 = json.load(open(path + '{}.json'.format(name)))
-dataset3 = json.load(open(path + '{}.json'.format(name)))
-hflip(dataset1, path, name)  # 注意hflip可能会修改dataset,会影响下面的flip,所以搞3份出来
-vflip(dataset2, path, name)
-rotate180(dataset3, path, name)
+# 垂直翻转
+# dataset2 = json.load(open(path + '{}.json'.format(name)))
+# vflip(dataset2, path, name)
 
-# path = '/mfs/home/fangyong/data/guangdong/round2/train_clw/'
-# name = 'train2'
-# dataset = json.load(open(path + '{}.json'.format(name)))
-# vflip(dataset, path, name)
-# rotate180(dataset, path, name)
+#旋转180
+# dataset3 = json.load(open(path + '{}.json'.format(name)))
+# rotate180(dataset3, path, name)
+
+#交换xy轴
+dataset4 = json.load(open(path + '{}.json'.format(name)))
+xy_exchange(dataset4, path, name)
