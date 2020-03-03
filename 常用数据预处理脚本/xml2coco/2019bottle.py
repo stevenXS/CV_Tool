@@ -5,13 +5,20 @@ import xml.etree.ElementTree as ET
 import os
 
 ###### 需要配置以下2项：
-my_classes = ['1','2','3','4','5','6','7','8','9','10']  # clw note :因为中文名在xml中会有bug,因此xml中都是用的从1开始的id代替中文类别;背景类不在其中
+my_classes = ["\u74f6\u76d6\u7834\u635f","\u74f6\u76d6\u53d8\u5f62","\u74f6\u76d6\u574f\u8fb9","\u74f6\u76d6\u6253\u65cb",
+              "\u74f6\u76d6\u65ad\u70b9","\u6807\u8d34\u6b6a\u659c","\u6807\u8d34\u8d77\u76b1","\u6807\u8d34\u6c14\u6ce1",
+              "\u55b7\u7801\u6b63\u5e38","\u55b7\u7801\u5f02\u5e38", "\u9152\u6db2\u6742\u8d28", "\u74f6\u8eab\u7834\u635f",
+              "\u74f6\u8eab\u6c14\u6ce1"]  # clw note :因为中文名在xml中会有bug,因此xml中都是用的从1开始的id代替中文类别;背景类不在其中
 
 dataset_type = 'train'
-root_path = '/media/clwclw/data/2019bottle/coco_format'
+# root_path = 'C:/Users/62349/Downloads/test_ab_penmayichang'
+#root_path = '/media/clwclw/data/2019bottle/coco_format'
 #root_path = '/media/clwclw/data/2018yuncong/Part_AB'
+root_path = 'C:/Users/62349/Downloads/chongqing1_round2_train_20200213/xml_jiuye/train_crop'
 
-annotation_path = os.path.join(root_path, dataset_type) #clw note：所有xml保存文件路径
+# annotation_path = os.path.join(root_path, dataset_type) #clw note：所有xml保存文件路径
+#annotation_path = root_path #clw note：所有xml保存文件路径
+annotation_path = os.path.join(root_path, 'Annotations')
 save_json_path = os.path.join(root_path, dataset_type+'.json') #clw note:保存json的文件路径
 
 def load_load_image_labels(LABEL_PATH, class_name=[]):
@@ -22,9 +29,9 @@ def load_load_image_labels(LABEL_PATH, class_name=[]):
     #assign your categories which contain the classname and class id
     #the order must be same as the class_name
     categories = []
-    for i in range(1, len(my_classes)):
+    for i in range(0, len(my_classes)):
         #category = dict(id=i+1, name=my_classes[i], supercategory="none")
-        category = dict(id=i, name=my_classes[i], supercategory="none")
+        category = dict(id=i+1, name=my_classes[i], supercategory=my_classes[i])
         categories.append(category)
 
     # load ground-truth from xml annotations
@@ -45,7 +52,7 @@ def load_load_image_labels(LABEL_PATH, class_name=[]):
             "file_name": image_file,
 			"height": height,
 			"width": width,
-			"id": image_id
+			"id": image_id+1
 		})# id of the image. referenced in the annotation "image_id"
 
         for anno_id, obj in enumerate(root.iter('object')):
@@ -70,7 +77,7 @@ def load_load_image_labels(LABEL_PATH, class_name=[]):
                                 "segmentation": [],
                                 "area" : width * height,
                                 "iscrowd": 0,
-                                "image_id": image_id,
+                                "image_id": image_id+1,
                                 "bbox" : [xmin, ymin, width, height],  # clw note:根据实际情况修改
                                 "category_id": cls_id,
                                 "id": id_number,   #初始值id_number为0，每处理完一个xml文件，id_number+1

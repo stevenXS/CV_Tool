@@ -11,16 +11,16 @@ import cv2
 from PIL import Image, ImageDraw
 import time
 
-dataDir = 'C:/Users/62349/Downloads/chongqing1_round1_train1_20191223_split/' # clw modify
+dataDir = 'C:/Users/62349/Downloads/chongqing1_round1_train_20191223/' # clw modify
 # 瓶盖
 # img_folder = 'images'
 # annotations_list = ['annotations1']
 # savepath = os.path.join(dataDir, 'xml1')   # clw note: the path you want to save your results for coco to voc
 
 # 瓶身
-img_folder = 'images2'
-annotations_list = ['annotations2']
-savepath = os.path.join(dataDir, 'xml2')
+img_folder = 'images'
+annotations_list = ['annotations_pinggai_processed_modified']
+savepath = os.path.join(dataDir, 'xml_pinggai')
 
 
 
@@ -39,8 +39,7 @@ if not os.path.exists(anno_dir):
 
 datasets_list = ['train']  # clw note:need modify 2
 
-classes_names = ['背景', '瓶盖破损', '瓶盖变形', '瓶盖坏边', '瓶盖打旋', '瓶盖断点', '标贴歪斜',
-                 '标贴起皱', '标贴气泡', '喷码正常', '喷码异常']
+classes_ids = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
 
 # clw note: need modify 3(folder)
 headstr = """\
@@ -124,7 +123,7 @@ def showimg(coco, img, classes, cls_id, show=True):
     #I = Image.open('%s/%s%s%s' % (dataDir, dataset, img_folder, img['file_name']))
 
     # 通过id，得到注释的信息
-    annIds = coco.getAnnIds(imgIds=img['id'], catIds=cls_id, iscrowd=None)
+    annIds = coco.getAnnIds(imgIds=img['id'], catIds=int(cls_id), iscrowd=None)
     # print(annIds)
     anns = coco.loadAnns(annIds)
     # print(anns)
@@ -134,7 +133,7 @@ def showimg(coco, img, classes, cls_id, show=True):
         #class_name = classes[ann['category_id']]  # clw modify: 因为xml中最好不要有中文，因此考虑存classes_ids，见下
         #if class_name in classes_names:
 
-        class_name = classes_ids[ann['category_id']]
+        class_name = classes_ids[ann['category_id'] - 1]
         if class_name in classes_ids:
             #print(class_name)
             if 'bbox' in ann:
@@ -174,16 +173,11 @@ for annotation in annotations_list:
     # show all classes in coco
     classes = id2name(coco)
     print(classes)
+    print('class_ids:', classes_ids)
 
-    classes_ids = coco.getCatIds(catNms=classes_names)
-    #classes_ids = classes_names    # clw note :相当于一个索引的映射,如35类映射到21类,
-                                   # 要根据具体情况,比如数据集里面就已经是21类,那么就无需映射了
-    print(classes_ids)
-
-    for cls in classes_names:
+    for cls in classes_ids:
         # Get ID number of this class
-        cls_id = coco.getCatIds(catNms=[cls])
-        img_ids = coco.getImgIds(catIds=cls_id)
+        img_ids = coco.getImgIds(catIds=int(cls))
         print(cls, len(img_ids))
         time.sleep(0.1)  # clw note：防止和tqdm在控制台打印冲突
         # imgIds=img_ids[0:10]
@@ -191,6 +185,6 @@ for annotation in annotations_list:
             img = coco.loadImgs(imgId)[0]
             filename = img['file_name']
             # print(filename)
-            objs = showimg(coco, img, classes, classes_ids, show=False)
+            objs = showimg(coco, img, classes, cls, show=False)
             #print(objs)
             save_annotations_and_imgs(coco, filename, objs)
