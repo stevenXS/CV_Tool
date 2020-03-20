@@ -20,6 +20,7 @@ def convert_annotation(xml_path):
     for obj in root.iter('object'):
         difficult = obj.find('difficult').text
         cls = obj.find('name').text
+        cls = cls.replace(' ', '_') # 注意这一句非常关键,因为后面会按照空格提取txt内容,如果类别中有空格,那么就会有bug
         #if cls not in classes or int(difficult)==1:  # clw note:这里只对classes里面有的类进行聚类, 也可以把这三句屏蔽掉
         #    continue
         #cls_id = classes.index(cls)
@@ -43,8 +44,8 @@ def scan_annotations(img_path, save_path = "train.txt"):
     pass
 
 if __name__ == "__main__":
-    #img_path = "/media/clwclw/data/textile/train/"
-    img_path = "/media/clwclw/data/2019jiangyin/train_classes/hole"
+    # img_path = "/media/clwclw/data/2019bottle/jiuye_zj/annotations/"
+    img_path = "/media/clwclw/data/2019jiangyin/mydataset/train/"
     save_path = "train.txt"
 
     if len(sys.argv) > 1:
@@ -58,6 +59,6 @@ if __name__ == "__main__":
         sys.exit(0)
 
     scan_annotations(img_path, save_path)
-    kmeans_anchors(save_path, 1)
+    kmeans_anchors(save_path, 9)
     pass
 
