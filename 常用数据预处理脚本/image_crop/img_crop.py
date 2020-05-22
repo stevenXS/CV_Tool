@@ -1,9 +1,11 @@
 #coding: utf-8
-### 程序功能：数据格式为xml，转成切图后的xml，做一下坐标变换
+### 程序功能：默认将1张4096切成16张1024的图片
+### 使用： python img_crop.py /home/user/dataset/img_folder /home/user/dataset/save_path
 
 import os
 import numpy as np
 import copy, cv2
+import argparse
 
 cropped_width = 1024
 cropped_height = 1024
@@ -12,32 +14,6 @@ cropped_height = 1024
 step = 1024
 img_format = '.jpg'
 
-# 配置好训练集的路径
-img_root = "C:/Users/62349/Desktop/20200110/all/"
-#img_root = "C:/Users/62349/Downloads/chongqing1_round1_train1_20191223_split/visualized_image2/"
-save_root = img_root
-mode = 'crop'  # clw note: 3 choice: (1)crop (2)scale (3)diff
-
-if mode == 'crop':
-    crop_root = save_root + "crop/"
-elif mode == 'scale':
-    scale_root = save_root + "scale/"
-elif mode =='diff':
-    diff_root = save_root + "diff/"
-
-def prepare_folder():
-    if not os.path.exists(save_root): 
-        os.makedirs(save_root)
-    if mode == 'crop':
-        if not os.path.exists(crop_root):
-            os.makedirs(crop_root)
-    elif mode == 'scale':
-        if not os.path.exists(scale_root):
-            os.makedirs(scale_root)
-    elif mode == 'diff':
-        if not os.path.exists(diff_root):
-            os.makedirs(diff_root)
-    pass
 
 # def image_crop(img, img_file_name):  # written by huminglong, but not good
 #     row = 0
@@ -56,7 +32,7 @@ def prepare_folder():
 #     pass
 
 ### 裁剪图片 ###
-def image_crop(image, img_file_name):
+def image_crop(image, img_file_name, save_path):
     shape = image.shape
     for start_h in range(0, shape[0], step):
         for start_w in range(0, shape[1], step):
@@ -71,13 +47,13 @@ def image_crop(image, img_file_name):
             bottom_right_row = min(start_h + cropped_height, shape[0]) # 防止截取的左下角和右下角超边界，因此同样需要约束
             bottom_right_col = min(start_w + cropped_width, shape[1])
             subImage = image[top_left_row:bottom_right_row, top_left_col: bottom_right_col]
-            img_save_path = os.path.join(crop_root, "%s_%04d_%04d%s" % (img_file_name[:-4], top_left_row, top_left_col, img_format))
-            cv2.imwrite(img_save_path, subImage)
+            img_save_path = os.path.join(save_path, "%s_%04d_%04d%s" % (img_file_name[:-4], top_left_row, top_left_col, img_format))
+            cv2.imwrite(img_save_path, subImage, [int( cv2.IMWRITE_JPEG_QUALITY), 100])
 
 
-def image_scale(img, img_file_name):
+def image_scale(img, img_file_name, save_path):
     scaled_img = cv2.resize(img,(cropped_width, cropped_height), interpolation=cv2.INTER_AREA)
-    scaled_img_path = os.path.join(scale_root, img_file_name)
+    scaled_img_path = os.path.join(save_path, img_file_name)
     cv2.imwrite(scaled_img_path, scaled_img)
     print("save", scaled_img_path)
     pass
@@ -112,37 +88,54 @@ def imgs_rgb_mean(image_path):
     B_mean = np.mean(per_image_Bmean)
     return R_mean, G_mean, B_mean
 
-def scale_diff(img, img_file_name):
+def scale_diff(img, img_file_name, save_path):
     R_mean, G_mean, B_mean = img_rgb_mean(img)
     mean = np.array([B_mean, G_mean, R_mean]).reshape(1,1,3) 
     diff_img = (img - mean) * 5 + 128
-    diff_img_path = os.path.join(diff_root, img_file_name)
+    diff_img_path = os.path.join(save_path, img_file_name)
     cv2.imwrite(diff_img_path, diff_img)
     print("save", diff_img_path)
     pass
 
-def main():
-    ### 主函数 ###
 
-    print("list *%s from %s" % (img_format, img_root))
-    image_file_names = [i for i in os.listdir(img_root) if img_format in i] 
+
+
+if __name__ == "__main__":
+
+    ### 主函数 ###
+    parser = argparse.ArgumentParser()
+    # parser.add_argument('--img_root', default='D:/1', type=str, help='src path')
+    # parser.add_argument('--save_root', default='D:/1/2', type=str, help='dst path')
+    parser.add_argument('img_root', type=str, help='src path')
+    parser.add_argument('save_root', type=str, help='dst path')
+    opt = parser.parse_args()
+    print(opt, end='\n\n')
+
+    mode = 'crop'  # clw note: 3 choice: (1)crop (2)scale (3)diff
+    if mode == 'crop':
+        save_path = opt.save_root + '/crop/'
+    elif mode == 'scale':
+        save_path =opt.save_root + '/scale/'
+    elif mode == 'diff':
+        save_path = opt.save_root + '/diff/'
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+
+    print("list *%s from %s" % (img_format, opt.img_root))
+    image_file_names = [i for i in os.listdir(opt.img_root) if img_format in i]
 
     for idx, img_file_name in enumerate(image_file_names):
         print (idx + 1, 'read img', img_file_name)
-        img_path = os.path.join(img_root, img_file_name)
+        img_path = os.path.join(opt.img_root, img_file_name)
         img = cv2.imread(img_path)
         if mode == 'crop':
-            image_crop(img, img_file_name)
+            print(save_path)
+            image_crop(img, img_file_name, save_path)
         elif mode == 'scale':
-            image_scale(img, img_file_name)
+            image_scale(img, img_file_name, save_path)
         elif mode == 'diff':
-            scale_diff(img, img_file_name)
-    pass
+            scale_diff(img, img_file_name, save_path)
 
-if __name__ == "__main__":
-    prepare_folder()
-    main()
-    pass
 
 
 
