@@ -50,4 +50,4 @@ if __name__ == '__main__':
     #print(opt, end='\n\n')
 
     #classify_picture(opt.xml_root_path)
-    classify_picture('/media/clwclw/data/2019xxxx/train/')
+    classify_picture('D:/textile/new/train_val')

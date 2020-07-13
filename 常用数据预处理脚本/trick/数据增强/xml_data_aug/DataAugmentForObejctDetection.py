@@ -614,12 +614,12 @@ if __name__ == '__main__':
                     os.makedirs(augment_save_path)
 
                 generate_xml(file[:-4] + '_fliph' + file[-4:], aug_bboxes_fliph, img.shape, augment_save_path)
-                cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_fliph' + file[-4:] , aug_img_fliph)
+                cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_fliph' + file[-4:] , aug_img_fliph, [int( cv2.IMWRITE_JPEG_QUALITY), 100])
 
                 generate_xml(file[:-4] + '_flipv' + file[-4:], aug_bboxes_flipv, img.shape, augment_save_path)
-                cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_flipv' + file[-4:] , aug_img_flipv)
+                cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_flipv' + file[-4:] , aug_img_flipv, [int( cv2.IMWRITE_JPEG_QUALITY), 100])
 
                 generate_xml(file[:-4] + '_rotate' + file[-4:], aug_bboxes_rotate, img.shape, augment_save_path)
-                cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_rotate' + file[-4:] , aug_img_rotate)
+                cv2.imwrite(os.path.join(augment_save_path, file[:-4]) + '_rotate' + file[-4:] , aug_img_rotate, [int( cv2.IMWRITE_JPEG_QUALITY), 100])
 
                 print('clw: processed %d images.' % (cnt + 1))
