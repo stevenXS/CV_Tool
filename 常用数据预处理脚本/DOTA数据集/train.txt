@@ -1,0 +1,6 @@
+D:/dataset/DOTA/image/P0003.png
+D:/dataset/DOTA/image/P0004.png
+D:/dataset/DOTA/image/P0007.png
+D:/dataset/DOTA/image/P0019.png
+D:/dataset/DOTA/image/P0027.png
+D:/dataset/DOTA/image/P0047.png
