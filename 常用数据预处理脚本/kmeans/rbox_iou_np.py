@@ -93,3 +93,4 @@ if __name__ == '__main__':
     print(skew_bbox_iou(box1, box2))  # iou = 0.2
     print(skew_bbox_iou(box3, box4, wh_iou=True))  # iou = 0.6
     print('time use：', time.time() - start)
+

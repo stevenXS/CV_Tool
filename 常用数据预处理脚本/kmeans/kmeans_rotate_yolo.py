@@ -13,8 +13,11 @@ from rbox_iou_np import skew_bbox_iou
 import time
 import math
 
+#img_format = '.bmp'
+img_format = '.jpg'
+
 def convert_annotation(txt_path):
-    img = cv2.imread(txt_path[:-4] + '.png')
+    img = cv2.imread(txt_path[:-4] + img_format)
     img_h, img_w = img.shape[:2]
     with open(txt_path, 'r') as f:
         annotations = ""
@@ -38,7 +41,7 @@ def convert_annotation(txt_path):
 
 
 def scan_annotations(img_path, save_path="train_info.txt"):
-    image_names = [i for i in os.listdir(img_path) if i.endswith(".png") or i.endswith(".jpg")]
+    image_names = [i for i in os.listdir(img_path) if i.endswith(img_format)]
     with open(save_path, 'w') as f:
         pbar = tqdm(image_names)
         for image_name in pbar:
@@ -98,10 +101,10 @@ class YOLO_Kmeans:
         np.random.seed()
         clusters = boxes[np.random.choice(box_number, k, replace=False)]  # init k clusters，随机从所有box里面选9个，开始聚类
         while True:
-            start = time.time()
+            #start = time.time()
             #distances = 1 - self.iou(boxes, clusters)
             distances = 1 - skew_bbox_iou(boxes, clusters, wh_iou=True)
-            print('time use: %.3fs' %(time.time()-start) )
+            #print('time use: %.3fs' %(time.time()-start) )
             current_nearest = np.argmin(distances, axis=1)
             if (last_nearest == current_nearest).all():
                 break  # clusters won't change
@@ -162,6 +165,7 @@ class YOLO_Kmeans:
             return result
 
     def txt2clusters(self):
+        start = time.time()
         all_boxes = self.txt2boxes()  # all gt box in all txts
         result = self.kmeans(all_boxes, k=self.cluster_number)  # clw note: find 9 boxes in n boxes, which has
         result_ratio = result[np.lexsort(result.T[0, None])]  # clw note TODO: 按照第一维度排序，理论上应该按面积排序
@@ -169,14 +173,15 @@ class YOLO_Kmeans:
 
         nAnchor = len(result_ratio)
         anchor = result_ratio[0]
-        format_anchors = str(anchor[0]) + "," + str(anchor[1]) + "," + str(anchor[2] * 180 / math.pi)   # str(anchor[2])
+        format_anchors = str(anchor[0]) + "," + str(anchor[1]) + "," + str(anchor[2])   #str(anchor[2] * 180 / math.pi)   # str(anchor[2])
         for i in range(1, nAnchor):
             anchor = result_ratio[i]
-            format_anchors += ",  " + str(anchor[0]) + "," + str(anchor[1])+ "," + str(anchor[2]* 180 / math.pi)  # str(anchor[2])
+            format_anchors += ",  " + str(anchor[0]) + "," + str(anchor[1])+ "," +  str(anchor[2])  #str(anchor[2]* 180 / math.pi)  # str(anchor[2])
 
         # print("\nK anchors: {}".format(format_anchors))
         # print("Accuracy: {:.2f}%".format( self.avg_iou(all_boxes, result) * 100))  # clw note
         # pass
+        print('time use: %.3fs' % (time.time() - start))
         return format_anchors, self.avg_iou(all_boxes, result) * 100  # clw modify
 
 
@@ -193,24 +198,35 @@ def kmeans_anchors(filename, cluster_number):
     # print('clw: box_height_list = ', sorted(box_height_list))
 
     ### option : Multiple times kmeans to get better acc, add by clw
-    # print('Multiple times kmeans to get better acc:')
-    # for i in tqdm(range(0, 10)):  # clw modify:多次聚类，比如聚类10次，输出最大的acc和对应的anchor
-    #     kmeans = YOLO_Kmeans(cluster_number, filename)
-    #     anchors, acc = kmeans.txt2clusters()
-    #     if acc > acc_max:
-    #         acc_max = acc
-    #         anchors_max = anchors
-    # print("K anchors: {}".format(anchors_max))
-    # print("Accuracy: {:.2f}%".format(acc_max))
+    print('Multiple times kmeans to get better acc:')
+    for i in tqdm(range(0, 4)):  # clw modify:多次聚类，比如聚类10次，输出最大的acc和对应的anchor
+        print('================ epoch:', i+1)
+        kmeans = YOLO_Kmeans(cluster_number, filename)
+        anchors, acc = kmeans.txt2clusters()
+        if acc > acc_max:
+            acc_max = acc
+            anchors_max = anchors
+    print("K anchors: {}".format(anchors_max))
+    print("Accuracy: {:.2f}%".format(acc_max))
 
 
 if __name__ == "__main__":
 
-    img_path = 'D:/dataset/DOTA/image'  # 暂时认为 img 和 xml 在同一文件夹
+    #img_path = 'D:/dataset/DOTA/image'  # 暂时认为 img 和 xml 在同一文件夹
+    #img_path = 'D:/dataset/HRSC2016_dataset/HRSC2016/Train/AllImages'
+    img_path = 'D:/dataset/HRSC2016_dataset/HRSC2016/Train/hrsc2016'
     if not os.path.exists(img_path):
         raise Exception("not exists '%s'" % (img_path))
 
     save_path = 'train_info.txt'
     scan_annotations(img_path, save_path)  # 扫描所有txt，将训练集图片和对应box信息写入txt中
     kmeans_anchors(save_path, 9)  # 读取上面的txt，得到所有bbox，然后做聚类
-    pass
+
+    ### HRSC2016 聚类结果：（原始尺寸）
+    # K anchors: 153.64470000000006,29.728680000000054,-57.726013521446056,  155.19675,29.394334999999984,40.098182002066956,  303.57180000000005,41.02582000000001,81.26501050614421,  319.33545000000004,44.92217000000002,7.6706758823311665,  349.01929999999993,52.78947000000005,-40.50205995185467,  364.179,58.62256000000002,33.901563233635784,  397.41065000000003,66.58615,62.141971135857844,  398.16859999999997,69.25216999999998,-69.58910466962975,  535.7231000000002,88.19912,-13.074616135565773  Accuracy: 51%
+    # K anchors: 134.16639999999995,29.157140000000027,0.1908657,  143.9851500000001,29.08942000000002,-0.99382035,  322.0242999999999,45.81320999999997,1.307876,  350.22569999999996,50.478650000000016,0.653704,  352.1608,50.480260000000015,0.16709065,  354.24030000000005,50.90028000000004,-0.31161045,  354.81139999999994,58.26080000000002,-1.2549245,  356.0322,55.23478,-0.81037565,  635.0943,160.76770000000005,-0.4397524  Accuracy: 49.48%
+    # K anchors: 153.60285000000002,29.688135000000017,-1.013242,  155.19675,29.394334999999984,0.6998453,  303.57180000000005,41.02582000000001,1.418342,  319.33545000000004,44.92217000000002,0.13387854999999999,  349.01929999999993,52.797129999999925,-0.7143881,  364.179,58.62256000000002,0.5916939,  397.41065000000003,66.58615,1.084582,  398.8361,69.37175500000006,-1.2166975,  533.6992,87.04564000000005,-0.2296711  Accuracy: 51.07%
+    # K anchors: 146.08159999999998, 29.14616000000001, -1.031564, 153.24849999999992, 29.746440000000007, 0.1205965, 298.4135, 40.40505000000002, 1.398906, 319.3420499999999, 43.87968499999994, 0.61844825, 342.31305000000003, 51.46401499999996, -0.8035791000000001, 355.5137, 51.19388999999997, 0.17092765, 399.54335000000003, 69.70184999999998, -1.224561, 420.4684, 69.64202999999998, 1.066791, 440.3544999999999, 73.31273500000003, -0.35417615  Accuracy: 51.11 %
+
+    ### HRSC2016 聚类结果：（resize到608x608）
+    # K anchors: 85.39699505541348,22.482303458282956,-0.9972177,  85.4487815181518,22.309772127139354,1.105451,  85.6279806253456,23.668458355631856,0.09985000999999999,  183.51976346644005,38.623342671480145,-1.218114,  189.0705262012693,38.418077033374516,0.626662,  189.53320248007088,39.30565382781458,0.1563291,  190.48912077701107,40.58675092556226,-0.57682135,  191.35439400749064,40.12343195767198,1.295342,  330.95738882578183,102.08168055993517,-0.52013795  Accuracy: 54.11%
