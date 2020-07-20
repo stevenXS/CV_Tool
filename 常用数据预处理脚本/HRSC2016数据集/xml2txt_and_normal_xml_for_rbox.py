@@ -36,9 +36,10 @@ import os
 import xml.etree.ElementTree as ET
 from tqdm import tqdm
 import math
+from utils import get_rotated_coors
 
-# root_dir = 'D:/dataset/HRSC2016_dataset/HRSC2016/Train'
-root_dir = 'D:/dataset/HRSC2016_dataset/HRSC2016/Test'
+root_dir = 'D:/dataset/HRSC2016_dataset/HRSC2016/Train'
+# root_dir = 'D:/dataset/HRSC2016_dataset/HRSC2016/Test'
 annotation_dir = os.path.join(root_dir, 'Annotations')
 image_dir = os.path.join(root_dir, 'AllImages')
 annotation_filenames = os.listdir(annotation_dir)
@@ -72,7 +73,13 @@ for annotation_filename in tqdm(annotation_filenames):
             class_id = 0
             labels.append([xctr, yctr, w, h, theta, class_id])
             bbox_info_str = ""
-            for item in [ class_id, xctr / img_w, yctr / img_h, w / img_w, h / img_h, theta ]:
+            # for item in [ class_id, xctr / img_w, yctr / img_h, w / img_w, h / img_h, theta ]:
+            #     bbox_info_str += (str(item) + ' ')
+            box_8coord = get_rotated_coors([xctr, yctr, w, h, theta])
+            box_8coord[0:7:2] /= img_w
+            box_8coord[1:8:2] /= img_h
+            box = [ class_id ] + list(box_8coord)
+            for item in box:
                 bbox_info_str += (str(item) + ' ')
             bbox_info_str += '\n'
             f.write(bbox_info_str)

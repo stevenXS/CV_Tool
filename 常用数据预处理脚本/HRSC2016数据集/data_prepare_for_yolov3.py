@@ -10,11 +10,11 @@ import os
 import cv2
 from tqdm import tqdm
 
-# data_path = 'D:\dataset\HRSC2016_dataset\HRSC2016\Train\AllImages'
-# save_path = 'D:\dataset\HRSC2016_dataset\HRSC2016\Train\hrsc2016'
+data_path = 'D:\dataset\HRSC2016_dataset\HRSC2016\Train\AllImages'
+save_path = 'D:\dataset\HRSC2016_dataset\HRSC2016\Train\hrsc2016'
 
-data_path = 'D:\dataset\HRSC2016_dataset\HRSC2016\Test\AllImages'
-save_path = 'D:\dataset\HRSC2016_dataset\HRSC2016\Test\hrsc2016'
+# data_path = 'D:\dataset\HRSC2016_dataset\HRSC2016\Test\AllImages'
+# save_path = 'D:\dataset\HRSC2016_dataset\HRSC2016\Test\hrsc2016'
 
 if not os.path.exists(save_path):
     os.makedirs(save_path)
@@ -26,6 +26,7 @@ for txt_file_name in tqdm(txt_file_list):
         if len(lines) == 0:
             continue
         shutil.copy(os.path.join(data_path, txt_file_name),  os.path.join(save_path, txt_file_name))
+        ### clw note: resize后，之前的xml里面的box就不对了，所以暂时先不考虑复制xml
         #shutil.copy(os.path.join(data_path, txt_file_name[:-4]+'.xml'),  os.path.join(save_path, txt_file_name[:-4]+'.xml'))
         img_file_name = txt_file_name[:-4] + '.bmp'
         img = cv2.imread(os.path.join(data_path, img_file_name))

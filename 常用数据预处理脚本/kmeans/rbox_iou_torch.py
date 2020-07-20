@@ -52,32 +52,36 @@ def get_rotated_coors(box):
     return r_box
 
 
-# 输入的是xywha
-# 支持输入单个的box和多box tensor的iou计算，其中默认box1为单个的
+# 支持输入多个的box和多box的iou计算，原版box1为单个的；输入的是xywha
 def skew_bbox_iou(box1, box2):
     #ft = torch.cuda.FloatTensor
     ft = torch.FloatTensor
     if isinstance(box1, list):  box1 = ft(box1)
     if isinstance(box2, list):  box2 = ft(box2)
-    if len(box1.shape) < len(box2.shape):  # 输入的单box维度不匹配时，unsqueeze一下
+    if len(box1.shape) < len(box2.shape):  # 输入的单box维度不匹配时，比如box1只有一个框，而且没有写成列表套列表，只给了一个列表，因此和box2相比就少了一个维度；unsqueeze一下
         box1 = box1.unsqueeze(0)
-    if not box1.shape == box2.shape:
-        box1 = box1.repeat(len(box2), 1)
+    # if not box1.shape == box2.shape:
+    #     box1 = box1.repeat(len(box2), 1)
+    # box1 = box1[:, :5]
+    # box2 = box2[:, :5]
 
-    box1 = box1[:, :5]
-    box2 = box2[:, :5]
-
-    ious = []
-    for i in range(len(box2)):
-        r_b1 = get_rotated_coors(box1[i])
-        r_b2 = get_rotated_coors(box2[i])
-        ious.append(skewiou(r_b1, r_b2))
-    return ft(ious)
+    ious_all = []
+    for i in range(len(box1)):
+        ious = []
+        for j in range(len(box2)):
+            r_b1 = get_rotated_coors(box1[i])
+            r_b2 = get_rotated_coors(box2[j])
+            ious.append(skewiou(r_b1, r_b2))
+        ious_all.append(ious)
+    return ft(ious_all)
 
 
 if __name__ == '__main__':
     start = time.time()
-    box1 = [[10, 10, 20, 20, 0]]
+    box1 = [[10, 10, 20, 20, 0], [10, 10, 20, 20, 0], [20, 10, 14.14, 14.14, math.pi / 4]]
     box2 = [[20, 10, 14.14, 14.14, math.pi / 4], [10, 10, 20, 20, 0]]
-    print(skew_bbox_iou(box1, box2))
+    # box3 = [20, 10, 0]
+    # box4 = [[14.14, 14.14, math.pi / 4]]
+    print(skew_bbox_iou(box1, box2))  # iou = 0.2
+    # print(skew_bbox_iou(box3, box4, wh_iou=True))  # iou = 0.6
     print('time use：', time.time() - start)
