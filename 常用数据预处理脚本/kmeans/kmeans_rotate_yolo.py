@@ -24,19 +24,43 @@ def convert_annotation(txt_path):
         for line in f.readlines():
             box_info = line.strip().split(' ')
 
-            cls = box_info[0]
-            # cls = cls.replace(' ', '_')  # 注意这一句非常关键,因为后面会按照空格提取txt内容,如果class name带空格,那么就会有bug
-            xctr = float(box_info[1]) * img_w
-            yctr = float(box_info[2]) * img_h
-            w = float(box_info[3]) * img_w
-            h = float(box_info[4]) * img_h
-            xmin = xctr - w / 2
-            ymin = yctr - h / 2
-            xmax = xctr + w / 2
-            ymax = yctr + h / 2
-            theta = float(box_info[5])  # clw added
+            ################### 5 coord txt ###################
+            # cls = box_info[0]
+            # # cls = cls.replace(' ', '_')  # 注意这一句非常关键,因为后面会按照空格提取txt内容,如果class name带空格,那么就会有bug
+            # xctr = float(box_info[1]) * img_w
+            # yctr = float(box_info[2]) * img_h
+            # w = float(box_info[3]) * img_w
+            # h = float(box_info[4]) * img_h
+            # xmin = xctr - w / 2
+            # ymin = yctr - h / 2
+            # xmax = xctr + w / 2
+            # ymax = yctr + h / 2
+            # theta = float(box_info[5])  # clw added
+            ####################
 
-            annotations += " " + ",".join([str(a) for a in [xmin, ymin, xmax, ymax, theta]]) + ',' + str(cls)
+
+            ################### 8 coord txt ###################
+            cls = box_info[0]
+            box = np.array(box_info[1:], dtype=np.float32).reshape([4, 2])
+            # print(box)
+            rect1 = cv2.minAreaRect(box)  # 生成最小外接矩形，返回一个Box2D结构rect：
+                                          # （最小外接矩形的中心（x，y），（宽度，高度），旋转角度）
+                                          # 如用上面的输入，会输出((15.0, 15.0), (10.0, 10.0), -90.0)
+                                          # 旋转角度θ是水平轴（x轴）逆时针旋转，与碰到的矩形的第一条边的夹角
+            # print('rect1 = ', rect1)
+            xctr, yctr, w, h, theta = rect1[0][0], rect1[0][1], rect1[1][0], rect1[1][1], rect1[2]
+            ### opencv表示法 -> 角度是指长边和x轴所成夹角，从[-90° ~ 90°)
+            if w < h:
+                theta = 90 + theta
+                w, h = h, w
+            theta = theta / 180 * math.pi
+            ####################
+
+
+            ### 转换到实际尺寸
+            #annotations += " " + ",".join([str(a) for a in [xctr, yctr, w, h, theta]]) + ',' + str(cls)
+            annotations += " " + ",".join([str(a) for a in [xctr*img_w, yctr*img_h, w*img_w, h*img_h, theta]]) + ',' + str(cls)
+
         return annotations
 
 
@@ -91,8 +115,8 @@ class YOLO_Kmeans:
         return result
 
     def avg_iou(self, boxes, clusters):
-        #accuracy = np.mean([np.max(self.iou(boxes, clusters), axis=1)])
-        accuracy = np.mean([np.max(skew_bbox_iou(boxes, clusters, wh_iou=True), axis=1)])
+        accuracy = np.mean([np.max(self.iou(boxes, clusters), axis=1)])
+        #accuracy = np.mean([np.max(skew_bbox_iou(boxes, clusters, wh_iou=True), axis=1)])
         return accuracy
 
     def kmeans(self, boxes, k, dist=np.median):  # clw note: np.median，求中位数
@@ -102,8 +126,8 @@ class YOLO_Kmeans:
         clusters = boxes[np.random.choice(box_number, k, replace=False)]  # init k clusters，随机从所有box里面选9个，开始聚类
         while True:
             start = time.time()
-            #distances = 1 - self.iou(boxes, clusters)
-            distances = 1 - skew_bbox_iou(boxes, clusters, wh_iou=True)
+            distances = 1 - self.iou(boxes, clusters)
+            #distances = 1 - skew_bbox_iou(boxes, clusters, wh_iou=True)
             print('One time cluster, time use: %.3fs' %(time.time()-start) )
             current_nearest = np.argmin(distances, axis=1)
             if (last_nearest == current_nearest).all():
@@ -133,33 +157,10 @@ class YOLO_Kmeans:
                 # 对应length=3
                 length = len(infos)
                 for i in range(1, length):  # clw note：这里要从1开始，因为0是图片路径字符串
-                    xmax = float(infos[i].split(',')[2])
-                    xmin = float(infos[i].split(',')[0])
-                    width = xmax - xmin
-                    height = float(infos[i].split(',')[3]) - float(infos[i].split(',')[1])
+                    width = float(infos[i].split(',')[2])
+                    height = float(infos[i].split(',')[3])
                     theta = float(infos[i].split(',')[4])
                     dataSet.append([width, height, theta])
-
-                    # --------------------------------------------------------------------------
-                    # clw add: 统计所有box宽和高的最大最小值
-                    global box_width_min
-                    global box_height_min
-                    global box_width_max
-                    global box_height_max
-
-                    if width < box_width_min:
-                        box_width_min = width
-                    if height < box_height_min:
-                        box_height_min = height
-                    if width > box_width_max:
-                        box_width_max = width
-                    if height > box_height_max:
-                        box_height_max = height
-
-                    box_width_list.append(width)
-                    box_height_list.append(height)
-                    box_scale_list.append(round(width / height, 2))
-                    # --------------------------------------------------------------------------
 
             result = np.array(dataSet)
             return result
@@ -173,7 +174,7 @@ class YOLO_Kmeans:
 
         nAnchor = len(result_ratio)
         anchor = result_ratio[0]
-        format_anchors = str(anchor[0]) + "," + str(anchor[1]) + "," + str(anchor[2])   #str(anchor[2] * 180 / math.pi)   # str(anchor[2])
+        format_anchors = str(anchor[0]) + "," + str(anchor[1]) + ","  + str(anchor[2])   #str(anchor[2] * 180 / math.pi)   # str(anchor[2])
         for i in range(1, nAnchor):
             anchor = result_ratio[i]
             format_anchors += ",  " + str(anchor[0]) + "," + str(anchor[1])+ "," +  str(anchor[2])  #str(anchor[2]* 180 / math.pi)  # str(anchor[2])
@@ -233,3 +234,24 @@ if __name__ == "__main__":
     # K anchors: 65.80976227861748, 21.916235726653298, 0.12316565, 101.20643716608595, 24.801213880794705, -1.174248, 148.4480568047337, 28.662507826086994, 0.6268285, 169.8441158734424, 33.518423433623354, 1.2899615, 179.68553283626318, 37.44407146075452, -0.73150325, 181.9370548871432, 37.02365686366138, 0.15708139999999998, 262.797747350715, 58.420735298416616, 0.7094149, 265.19500593723484, 62.20253203883496, -1.196715, 281.43522323624484, 66.83933123876199, -0.2824789  Accuracy: 54.30 %
     ### 改为18个anchor：K anchors: 34.37395545863661,18.7533146677755,-0.096882795,  85.43945888355026,22.234035418868984,0.64415975,  87.27248386457902,22.934356161495884,-1.05316,  90.18134386317911,25.20662566091454,0.080508365,  91.44434032395566,23.359433341375166,1.211161,  159.90682138960898,30.398773777724557,1.4270995,  166.66744069264072,31.68249848159553,-1.2107215,  168.06643110173852,32.701739661537914,0.19420294999999999,  170.353525,32.843392549019654,0.6146669,  172.09315857113165,35.727610711240004,-0.39064135,  193.4506464864865,40.01605647058824,-0.8169922,  195.1503213114754,41.223980652962496,1.057615,  211.8379509012876,49.36749342891278,0.09622911,  220.38822821833162,51.273914602409604,-1.367477,  275.6920569636046,62.18695368647974,0.54654145,  284.26396971502965,65.50240666033736,1.2829245,  300.9885991158267,71.69895205811133,-0.4544155,  331.31774477485135,91.15590329670329,-1.170975  Accuracy: 64.77%
     ### 改为27个anchor：K anchors: 73.7137977215703,22.407025209512312,0.0748906,  77.91302183600817,21.498227030871718,-1.0836425,  85.40576000000001,22.36573544457974,1.13529,  127.92421420017106,29.577465435225953,-0.48633364999999995,  128.4539735267452,25.64585454545454,0.613651,  157.69659198635975,30.07026133333335,1.418342,  164.597433557047,33.157171294697946,-0.9732121,  164.91051855502477,32.083611924323094,0.1701482,  167.14538420878597,39.475073713558345,-0.68268635,  168.30583838383842,32.58734752995497,-1.2265505,  176.47806742502587,36.47190975688818,0.6161824,  181.15991176259655,35.48186527149559,1.1246345,  184.57085733558182,31.54090615384615,-0.8239819,  187.96947096774198,40.02238744241494,-0.16269825,  194.22886611570252,46.878859476961395,0.2359145,  220.4422308421018,50.13387350470117,0.9354458,  228.68667554709805,51.991558716049326,1.41733,  228.79395700680277,52.8627505671642,-0.8076533,  252.05747841105352,57.993447770859234,-1.218524,  257.0740294212333,58.89003162244221,-0.45325155,  265.27987832699614,61.38726207228916,0.1457163,  268.12434844450553,58.254391067961194,0.5484803,  280.84501164021157,59.97776444444446,1.195692,  310.2228439932318,101.32781493975904,-0.6703775,  343.33544698179,116.63176800291251,1.0371700000000001,  346.6634316498316,120.13515271411336,-1.243804,  362.97864461670974,123.15015742246312,0.03422084  Accuracy: 68.44%
+
+
+    ######### clw test 20200721: original code have bug.... ############
+
+
+    ####### 另外尝试聚9个尺寸，算iou；然后每个anchor分配6个角度；
+    # K anchors: 52.662030935287476,16.126209139823914,0.03390563594418031,  116.60394382476807,20.66474413871765,0.24729261670926977,  185.04678630828857,33.39964473247528,0.1819524919963937,  202.20453596115112,20.96282297372818,0.8055311951852566,  221.80779886245728,47.33237135410309,0.07985208896688137,  238.53792095184326,27.359263837337494,0.7916563256430256,  283.1369299888611,37.49797701835632,0.7963530099624619,  350.68040466308594,52.99155104160309,0.13103624748446852,  404.5491199493408,96.84079170227051,-0.3002447812955333
+    # Accuracy: 80.05%
+
+    # K anchors: (by ming71)
+    #  [[ 62.40441176  18.375     ]
+    #  [118.99141631  20.45922747]
+    #  [175.17518248  28.37591241]
+    #  [217.99150142  30.45325779]
+    #  [257.74906367  35.60674157]
+    #  [302.18032787  47.41530055]
+    #  [356.41085271  59.49612403]
+    #  [407.04166667  74.98333333]
+    #  [493.45283019  92.28301887]]
+    #
+    # Accuracy: 76.64%
