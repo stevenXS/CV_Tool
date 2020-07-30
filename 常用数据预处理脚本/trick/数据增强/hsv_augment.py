@@ -1,48 +1,27 @@
-### written by clw, reference ultralytics/yolov3
+### written by clw
 
 import cv2
 import numpy as np
+import os
 
 def augment_hsv(img, hgain=0.5, sgain=0.5, vgain=0.5):
-    x = (np.random.uniform(-1, 1, 3) * np.array([hgain, sgain, vgain]) + 1).astype(np.float32)  # random gains
+    x = (np.array([hgain, sgain, vgain])).astype(np.float32)  # random gains
     img_hsv = (cv2.cvtColor(img, cv2.COLOR_BGR2HSV) * x.reshape((1, 1, 3))).clip(None, 255).astype(np.uint8)
-    cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
-    return img_hsv
-
-def augment_h(img, hgain=1):
-    hsv_scale = np.array([hgain, 1, 1])  # random gains
-    img_hsv = (cv2.cvtColor(img, cv2.COLOR_BGR2HSV) * hsv_scale.reshape((1, 1, 3))).clip(None, 255).astype(np.uint8)
-    cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR, dst=img_hsv)  # no return needed
-    return img_hsv
-
-def augment_s(img, sgain=1):
-    hsv_scale = np.array([1, sgain, 1])  # random gains
-    img_hsv = (cv2.cvtColor(img, cv2.COLOR_BGR2HSV) * hsv_scale.reshape((1, 1, 3))).clip(None, 255).astype(np.uint8)
-    cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR, dst=img_hsv)  # no return needed
-    return img_hsv
-
-def augment_v(img, vgain=1):
-    hsv_scale = np.array([1, 1, vgain])  # random gains
-    img_hsv = (cv2.cvtColor(img, cv2.COLOR_BGR2HSV) * hsv_scale.reshape((1, 1, 3))).clip(None, 255).astype(np.uint8)
-    cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR, dst=img_hsv)
+    img_hsv = cv2.cvtColor(img_hsv, cv2.COLOR_HSV2BGR)
     return img_hsv
 
 if __name__ == "__main__":
-    img_path = 'C:/Users/Administrator/Desktop/2.jpg'
+    save_path = 'D:/wheat_hsv_effect'
+    if not os.path.exists(save_path):
+        os.makedirs(save_path)
+    img_path = 'D:/00b5fefed.jpg'
+    #img_path = 'D:/00e903abe.jpg'
     img = cv2.imread(img_path)
-    # for i in range(10):
-    #     augment_hsv(img, hgain=0.0103, sgain=0.691, vgain=0.433)
-    #     cv2.imwrite(img_path.split('.')[0] + '_' + str(i) + '.jpg', img)
 
-    gain = 1.5
-    mode = 'v'  # or 's' or 'v'
+    for gain in range(1, 20, 1):
+        gain /= 10
+        #img_hsv = augment_hsv(img, hgain=gain, sgain=1.0, vgain=1.0)
+        #img_hsv = augment_hsv(img, hgain=1.0, sgain=gain, vgain=1.0)
+        img_hsv = augment_hsv(img, hgain=1.0, sgain=1.0, vgain=gain)
+        cv2.imwrite(os.path.join(save_path, img_path.split('/')[-1][:-4] + '_' + str(gain) + '.jpg'), img_hsv)
 
-    if mode == 'h':
-        img_hsv = augment_h(img, gain) # 修改色调
-        cv2.imwrite(img_path.split('.')[0] + '_' + 'h' + str(gain) + '.jpg', img_hsv)
-    elif mode == 's':
-        img_hsv = augment_s(img, gain) # 修改饱和度
-        cv2.imwrite(img_path.split('.')[0] + '_' + 's' + str(gain) + '.jpg', img_hsv)
-    elif mode == 'v':
-        img_hsv = augment_v(img, gain) # 修改亮度
-        cv2.imwrite(img_path.split('.')[0] + '_' + 'v' + str(gain) + '.jpg', img_hsv)
