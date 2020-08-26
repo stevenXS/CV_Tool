@@ -26,9 +26,9 @@ def main():
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument("input_dir", help="input annotated directory")
-    parser.add_argument("output_dir", help="output dataset directory")
-    parser.add_argument("--labels", help="labels file", required=True)
+    parser.add_argument("--input_dir", default='C:/Users/62349/Desktop/labelme/examples/instance_segmentation/pear_4_val', help="input annotated directory")
+    parser.add_argument("--output_dir", default='C:/Users/62349/Desktop/labelme/examples/instance_segmentation/val', help="output dataset directory")
+    parser.add_argument("--labels", default='C:/Users/62349/Desktop/labelme/examples/instance_segmentation/labels.txt', help="labels file")  # 标签，其中含有每个类别的名字
     parser.add_argument(
         "--noviz", help="no visualization", action="store_true"
     )
@@ -155,6 +155,17 @@ def main():
             mask = pycocotools.mask.encode(mask)
             area = float(pycocotools.mask.area(mask))
             bbox = pycocotools.mask.toBbox(mask).flatten().tolist()
+
+            ### clw note: 考虑扩边处理，比如用YOLACCT检测水果圆度，如果没有扩边，可能矩形标注框和梨贴合过于紧密，导致回归的时候，
+            #             有时框并不那么准确，因此会有部分梨超出bbox范围，这样在crop_mask的时候，会有部分mask被bbox的直线截取，
+            #             导致圆度的测量会不准确！
+            ###
+            border = 100
+            bbox[0] -= border
+            bbox[1] -= border
+            bbox[2] += border * 2  # bbox[2]和[3]是wh，因此需要扩2倍
+            bbox[3] += border * 2
+            ###
 
             data["annotations"].append(
                 dict(
