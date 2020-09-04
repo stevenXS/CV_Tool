@@ -29,7 +29,7 @@ gallery.txt
 ......
 正样本: 00000000.png~00072823.png,72824个（包含4151张只有自己的，无法配对，这种也作为负样本）
 pid: 0~19657
-负样本：00072824~00093601，20778个
+负样本：00072824~00093601，20778个，考虑pid分配到 19658 ~ 40435
 验证集的query不要用只有一张图的这种；
 训练集也不要用只有一张图的这种；
 
@@ -38,17 +38,19 @@ pid: 0~19657
 剩下的随机往验证集的gallery和query扔，但是相同pid的，确保query至少有一张
 由于测试集gallery和query比例14:1，那么验证集最好也是这个比例；
 相同pid有4张的这种情况最多，有10837组，
-如果把2张扔到gallery，2张扔到query，那么只需要 959 组，就可以达到接近14:1的比例；
+如果把1张扔到gallery，1张扔到query，那么只需要 1917 组，就可以达到接近14:1的比例；
 
 总结：
-train: 72824 - 4151 - 959*2 = 66755
-val = query: 959*2 = 1918
-gallery: 20778+4151=24929
-
+train: 72824 - 4151 - 1917*2 = 64839
+val/query: 1917
+gallery: 20778+4151 + other1917 =26846
+query+gallery: 28763
 '''
+
 
 import os
 
+val_need_nums = 1917
 # 1、读取txt，用dict记录 imname 及 对应的pid
 imname_pid_dict = {}
 pid_nums_count_dict = {}
@@ -96,8 +98,7 @@ with open(label_path) as f:
         else:
             same_count += 1
 
-    for i in range(72824, 93601+1):  # 负样本 00072824~00093601
-        gallery += ('000' + str(i) + '.png' +'\n')
+
 
     ### 第2次遍历，把验证集选出来
     val_count = 0
@@ -108,25 +109,32 @@ with open(label_path) as f:
         print(i, l)
         if r in count_pid_dict[4]:  # 相同pid有4张的这种情况最多，有10837组， 如果把2张扔到gallery，2张扔到query，那么只需要 959 组，就可以达到接近14:1的比例；
             if b_needVal:
-                if same_pid_count >= 4:  # 把之前pid的先恢复了
-                    same_pid_count = 0
-                if same_pid_count >= 2:  # 2,3 加入验证集
+                if same_pid_count == 3: # 3加入gallery
+                    gallery += line
+                    same_pid_count =0  # 把之前pid的先恢复了
+                elif same_pid_count == 2:  # 2 加入val和 query
                     val += line
-                    query += l+'\n'
+                    query += line
                     val_count += 1
                     same_pid_count += 1
                 else:  # 0,1
                     train += line
                     same_pid_count += 1
 
-                if val_count >= 959 * 2:
+                if val_count >= val_need_nums and same_pid_count == 0:
                     b_needVal = False
-            else: # 验证集已经加满，剩下也全部加入训练集
+
+            else: # 验证集已经加满，剩下也全部加入train
                 train += line
         elif r in count_pid_dict[1]:    # 只有自己一张图的，也都放到验证集的gallery
-            gallery += l+'\n'
+            gallery += line
         else: # 全部加入训练集
             train += line
+
+
+    for i in range(72824, 93601+1):  # 负样本 00072824~00093601（label.txt未包含样本），各自占用一个pid
+        gallery += ('000' + str(i) + '.png' + ':' + str(i - 53166) +  '\n') # 考虑从label.txt已有的样本后面顺延，pid分配到 19658 ~ 40435
+
 
     # 训练集70906 + 验证集1918 = 72824
     with open(os.path.join(root, 'train.txt'), 'w') as f:
@@ -138,17 +146,11 @@ with open(label_path) as f:
     with open(os.path.join(root, 'gallery.txt'), 'w') as f:
         f.write(gallery)
 
-    print('end !!')
-
-
 neg_count = len(image_names) - pos_count
 
 
 # 2、切分验证集；比例最好和线上一致；线上是 14：1
 #    这里把 20778张负样本扔到验证集的gallery，然后
-
-
-
 
 print('end!')
 
