@@ -38,23 +38,22 @@ pid: 0~19657
 剩下的随机往验证集的gallery和query扔，但是相同pid的，确保query至少有一张
 由于测试集gallery和query比例14:1，那么验证集最好也是这个比例；
 相同pid有4张的这种情况最多，有10837组，
-如果把1张扔到gallery，1张扔到query，那么只需要 1917 组，就可以达到接近14:1的比例；
+如果把2张扔到gallery，2张扔到query，那么只需要 959 组，就可以达到接近14:1的比例；
 
 总结：
-train: 72824 - 4151 - 1917*2 = 64839
-val/query: 1917
-gallery: 20778+4151 + other1917 =26846
-query+gallery: 28763
-'''
+train: 72824 - 4151 - 959*4 = 64837
+val/query: 959*2 = 1918
+gallery: 20778+4151 + other959*2 =26847
 
+query+gallery: 28765
+'''
 
 import os
 
-val_need_nums = 1917
 # 1、读取txt，用dict记录 imname 及 对应的pid
 imname_pid_dict = {}
-pid_nums_count_dict = {}
-count_pid_dict = {}
+pid_nums_count_dict = {}  # 统计有n个相同pid的图片有m张， 主要是用于统计
+count_pid_dict = {}  # 统计有m张相同pid的图片对应的pid， 用于划分验证集
 root = 'D:/dataset/2020NAIC-REID/train'
 label_path = os.path.join(root, 'label.txt')
 pos_count = 0
@@ -81,8 +80,8 @@ with open(label_path) as f:
             raise Exception('Error: already have key %s' % l)
 
 
-        if r!= pre_pid:  # 名字不同，记录总共有几张这个人的图片； 必须是顺序
-            if same_count not in pid_nums_count_dict :
+        if r!= pre_pid:  # 名字不同，
+            if same_count not in pid_nums_count_dict :  # 记录总共有几张这个人的图片( 这种写法要求必须是顺序)
                 pid_nums_count_dict[same_count] = 1       # 只有自己本身也就是1张图(key)的，有4151张(value)，其实也应该作为负样本；
             else:
                 pid_nums_count_dict[same_count] += 1
@@ -91,14 +90,24 @@ with open(label_path) as f:
                 count_pid_dict[same_count] = [ pre_pid ]  # 最多的有749张图(key)，对应的pid是1107(value)
             else:
                 count_pid_dict[same_count].append(pre_pid)
-
-
             pre_pid = r
             same_count = 1
         else:
             same_count += 1
 
-
+    # 最后一张图需要再看一次，有两种情况：（1）和倒数第二张不同 =》same_count == 1  （2）和倒数第二张相同=》same_count != 1
+    if same_count == 1:  # 情况（1）
+        if 1 not in pid_nums_count_dict:
+            pid_nums_count_dict[1] = 1  # 只有自己本身也就是1张图(key)的  =》 有4151张(value)，其实也应该作为负样本； 这里就是 1:4151
+        else:
+            pid_nums_count_dict[1] += 1
+        if 1 not in count_pid_dict:
+            count_pid_dict[same_count] = [ pre_pid ]  # 比如最多的有749张图(key) =》 对应的pid是1107(value)； 这里就是 749：1107
+        else:
+            count_pid_dict[same_count].append(pre_pid)
+    else:  # 情况（2）
+        pid_nums_count_dict[same_count] += 1
+        count_pid_dict[same_count].append(pre_pid)
 
     ### 第2次遍历，把验证集选出来
     val_count = 0
@@ -109,22 +118,22 @@ with open(label_path) as f:
         print(i, l)
         if r in count_pid_dict[4]:  # 相同pid有4张的这种情况最多，有10837组， 如果把2张扔到gallery，2张扔到query，那么只需要 959 组，就可以达到接近14:1的比例；
             if b_needVal:
-                if same_pid_count == 3: # 3加入gallery
-                    gallery += line
-                    same_pid_count =0  # 把之前pid的先恢复了
-                elif same_pid_count == 2:  # 2 加入val和 query
+                if same_pid_count >= 2 and same_pid_count < 4:  # 2,3 加入验证集
                     val += line
                     query += line
                     val_count += 1
                     same_pid_count += 1
-                else:  # 0,1
-                    train += line
+                    if val_count >= 959 * 2 and same_pid_count >= 4:
+                        b_needVal = False
+                    if same_pid_count >= 4:  # 把之前pid的先恢复了
+                        same_pid_count = 0
+                elif same_pid_count <2 and same_pid_count >= 0:  # 0,1加入gallery
+                    gallery += line
                     same_pid_count += 1
+                else:
+                    raise Exception('error! same_pid_count can not be negative !')
 
-                if val_count >= val_need_nums and same_pid_count == 0:
-                    b_needVal = False
-
-            else: # 验证集已经加满，剩下也全部加入train
+            else: # 验证集已经加满，剩下也全部加入训练集
                 train += line
         elif r in count_pid_dict[1]:    # 只有自己一张图的，也都放到验证集的gallery
             gallery += line
@@ -146,11 +155,16 @@ with open(label_path) as f:
     with open(os.path.join(root, 'gallery.txt'), 'w') as f:
         f.write(gallery)
 
+
+
 neg_count = len(image_names) - pos_count
 
 
 # 2、切分验证集；比例最好和线上一致；线上是 14：1
 #    这里把 20778张负样本扔到验证集的gallery，然后
+
+
+
 
 print('end!')
 
